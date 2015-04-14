@@ -1,6 +1,6 @@
 ---
-layout:default
-title:Hello World
+layout: default
+title: Hello World
 ---
 
 There will be something here eventually. 
