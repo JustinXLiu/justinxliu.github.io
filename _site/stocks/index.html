@@ -28,13 +28,11 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="#">Justin Liu</a>
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
               <li> <a href="/">Home</a></li>
-              <li> <a href="/books">TLDR</a></li> 
               <li> <a href="/stocks">Stocks</a></li> 
               <li> <a href="/about">About</a></li>
             </ul>
@@ -47,7 +45,81 @@
 
 <div class="row">
     <div>
-        
+        <!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" /> 
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+</head> 
+
+<body>
+
+  <style>
+    #index {float:left; width:40%;} 
+    #balance {float:left; width:20%;}
+    #ind_stocks {float:left; width:40%;}
+  </style>
+
+  <h1>Current Holdings (Cost Basis) As of 1/1/2021</h1>
+  <div id="index"></div>
+  <div id="balance"></div>
+  <div id="ind_stocks"></div>
+
+  <!-- Reference: https://www.d3-graph-gallery.com/graph/pie_annotation.html -->
+	<script>
+    const index_data = {FXAIX: 194.72, FZILX: 45.55, FSRPX: 24.89, FHKCX: 21.74}
+    const ind_stocks_data = {NIO: 54.75, BILI: 39.44, PLTR: 124.60,
+        UBER: 32.25, SQ: 24.60, AAPL: 30.60, TWLO: 44.125, PD: 44.15,
+        DDOG: 27.46, BABA: 27.486}
+
+    const sumValues = obj => Object.values(obj).reduce((a, b) => a + b);
+    var balance_data = {STOCKS: sumValues(ind_stocks_data), INDEX: sumValues(index_data)}
+
+    function creatPieChart(name, width, height, radius, data) {
+       var svg = d3.select("#" + name).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+      var color = d3.scaleOrdinal().domain(data).range(d3.schemeSet2);
+      var pie = d3.pie().value(function(d) {return d.value;})
+      var data_ready = pie(d3.entries(data))
+
+      var arcGenerator = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
+
+      svg.selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('path')
+          .attr('d', arcGenerator)
+          .attr('fill', function(d){ return(color(d.data.key)) })
+          .attr("stroke", "black")
+          .style("stroke-width", "2px")
+          .style("opacity", 0.7)
+      svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('text')
+        .text(function(d){ return d.data.key})
+        .attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")";})
+        .style("text-anchor", "middle")
+        .style("font-size", 20)
+    }
+    
+    creatPieChart("index", 400, 400, 200, index_data)
+    creatPieChart("balance", 200, 200, 100, balance_data)
+    creatPieChart("ind_stocks", 400, 400, 200, ind_stocks_data)
+
+	</script> 
+</body> 
+
+</html>
+
     </div>
 </div>
 
