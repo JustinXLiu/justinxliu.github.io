@@ -1,0 +1,62 @@
+---
+title: Option Calculator
+layout: default
+---
+
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8"/> 
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+</head> 
+
+<body>
+    <p>
+      <label for="premium" style="display: inline-block; width: 240px; text-align: right">
+        Premium Price = <span id="premium-value"></span>
+      </label>
+      <input type="number" min="0" max="9999" step="1" value="10" id="premium" oninput="getResult()">
+    </p>
+    <p>
+      <label for="strike" style="display: inline-block; width: 240px; text-align: right">
+        Strike Price = <span id="strike-value"></span>
+      </label>
+      <input type="number" min="0" max="9999" step="5" value="100" id="strike" oninput="getResult()">
+    </p>
+    <p>
+      <label for="stock" style="display: inline-block; width: 240px; text-align: right">
+        Stock Price = <span id="stock-value"></span>
+      </label>
+      <input type="number" min="0" max="999999" step="5" value="100" id="stock" oninput="getResult()">
+    </p>
+    <p>
+      <label for="contract" style="display: inline-block; width: 240px; text-align: right">
+        Contract = <span id="contract-value"></span>
+      </label>
+      <input type="number" min="0" max="9999" step="1" value="1" onKeyDown="return false" id="contract" oninput="getResult()">
+    </p>
+
+    <div id="results"></div>
+</body> 
+
+<script>
+  function getResult() {
+    const premium = parseFloat(document.getElementById("premium").value)
+    const strike = parseFloat(document.getElementById("strike").value)
+    const stock = parseFloat(document.getElementById("stock").value)
+    const amount = parseFloat(document.getElementById("contract").value) * 100
+
+    const buyCallResult = stock < strike ? -premium * amount : (stock - (premium + strike)) * amount
+    const sellCallResult = stock < strike ? premium * amount : -(stock - (premium + strike)) * amount
+    const buyPutResult = stock < strike ? ((strike - premium) - stock) * amount : -premium * amount
+    const sellPutResult = stock < strike ? -((strike - premium) - stock) * amount : premium * amount
+
+    document.getElementById("results").innerHTML = 
+      "<p>" + "Buy Call Result: " + buyCallResult + "</p>" + 
+      "<p>" + "Sell Call Result: " + sellCallResult + "</p>" +
+      "<p>" + "Buy Put Result: " + buyPutResult + "</p>" + 
+      "<p>" + "Sell Put Result: " + sellPutResult + "</p>"
+  }
+</script>
+
+</html>
