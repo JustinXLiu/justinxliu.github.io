@@ -13,42 +13,49 @@ layout: default
 
 <body>
 
-  <style>
-    #index {float:left; width:40%;} 
-    #balance {float:left; width:20%;}
-    #ind_stocks {float:left; width:40%;}
-  </style>
-
-  <h1>Current Holdings (Cost Basis) As of 1/1/2021</h1>
+  <h1>Current Holdings (Cost Basis) As of 3/1/2021</h1>
+  <div id="allocation"></div>
   <div id="index"></div>
-  <div id="balance"></div>
   <div id="ind_stocks"></div>
+  <div id="option"></div>
 
   <!-- Reference: https://www.d3-graph-gallery.com/graph/pie_annotation.html -->
 	<script>
+    const allocation_data = {
+      "Index Fund": 303,
+      "Individual Stocks": 551,
+      "Cash": 216
+    }
     const index_data = {
-      FXAIX: 194.72, 
-      FZILX: 45.55, 
-      FSRPX: 24.89, 
-      FHKCX: 21.74
+      "FXAIX": 206, 
+      "FZILX": 48,  
+      "FHKCX": 24,
+      "ARKK": 25
     }
     const ind_stocks_data = {
-      NIO: 54.75, 
-      BILI: 39.44, 
-      PLTR: 124.60,
-      UBER: 32.25, 
-      SQ: 24.60, 
-      AAPL: 30.60, 
-      TWLO: 44.125, 
-      PD: 44.15,
-      DDOG: 27.46, 
-      BABA: 27.486
+      "XIACY": 18,
+      "RZZRY": 8,
+      "RYCEY": 7,
+      "NIO": 54.75, 
+      "BILI": 39.44, 
+      "PLTR": 151,
+      "SQ": 24.60, 
+      "AAPL": 30.60, 
+      "TWLO": 44.125, 
+      "BABA": 52,
+      "DIS": 26.8,
+      "OPEN": 42.4,
+      "ESTC": 27,
+      "TME": 14,
+      "QTT": 9,
+      "PTQQF": 5,
+      "GME": 0.2
     }
-    const sumValues = obj => Object.values(obj).reduce((a, b) => a + b)
-
-    var balance_data = {
-      STOCKS: sumValues(ind_stocks_data), 
-      INDEX: sumValues(index_data)
+    const option_data = {
+      "FXAIX": 206, 
+      "FZILX": 48,  
+      "FHKCX": 24,
+      "ARKK": 25
     }
 
     function creatPieChart(name, width, height, radius, data) {
@@ -87,9 +94,11 @@ layout: default
         .style("font-size", 20)
     }
     
-    creatPieChart("index", 400, 400, 200, index_data)
-    creatPieChart("balance", 200, 200, 100, balance_data)
-    creatPieChart("ind_stocks", 400, 400, 200, ind_stocks_data)
+    creatPieChart("allocation", 800, 800, 400, allocation_data)
+    creatPieChart("index", 800, 800, 400, index_data)
+    creatPieChart("ind_stocks", 800, 800, 400, ind_stocks_data)
+    creatPieChart("option", 800, 800, 400, option_data)
+
 	</script> 
 </body> 
 
