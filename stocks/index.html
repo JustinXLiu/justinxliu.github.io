@@ -13,7 +13,7 @@ layout: default
 
 <body>
 
-  <h1>Current Holdings (Cost Basis) As of 3/1/2021</h1>
+  <h1>Current Holdings (Cost Basis) As of 6/1/2021</h1>
   <div id="allocation"></div>
   <div id="index"></div>
   <div id="ind_stocks"></div>
@@ -22,48 +22,43 @@ layout: default
   <!-- Reference: https://www.d3-graph-gallery.com/graph/pie_annotation.html -->
 	<script>
     const allocation_data = {
-      "Index Fund": 303,
-      "Individual Stocks": 551,
-      "Option": 155,
-      "Cash": 216
+      "Index Fund": 327,
+      "Individual Stocks": 556,
+      "Option": 123,
+      "Cash": 172
     }
     const index_data = {
-      "FXAIX": 206, 
-      "FZILX": 48,  
-      "FHKCX": 24,
-      "ARKK": 25
+      "FXAIX": 217, 
+      "FZILX": 51,  
+      "FHKCX": 27,
+      "ARKK": 32
     }
     const ind_stocks_data = {
       "XIACY": 18,
       "RZZRY": 8,
-      "RYCEY": 7,
       "NIO": 54.75, 
       "BILI": 39.44, 
       "PLTR": 151,
       "SQ": 24.60, 
       "AAPL": 30.60, 
       "TWLO": 44.125, 
-      "BABA": 52,
+      "BABA": 24,
       "DIS": 26.8,
       "OPEN": 42.4,
       "ESTC": 27,
       "TME": 14,
       "QTT": 9,
-      "PTQQF": 5,
+      "COST": 16,
+      "QIPT": 5,
+      "GOOGL": 23,
       "GME": 0.2
     }
     const option_data = {
-      "ARKK": 8.4,
+      "ARKK": 10,
       "BABA": 34,
       "APPL": 31, 
-      "NNDM": 15,
-      "NIO": 20,
-      "PLTR": 21,
-      "BBW": 7,
-      "BB": 6, 
-      "STIC": 5,
-      "CCIV": 5,
-      "GLUU": 3.5 
+      "PLTR": 45,
+      "BBW": 3
     }
 
     function creatPieChart(name, width, height, radius, data) {
