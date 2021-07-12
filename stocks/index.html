@@ -5,104 +5,15 @@ layout: default
 
 <!DOCTYPE html> 
 <html lang="en"> 
-<head> 
-	<meta charset="UTF-8"/> 
-	<script src="https://d3js.org/d3.v5.min.js"></script>
-	<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-</head> 
-
-<body>
-
-  <h1>Current Holdings (Cost Basis) As of 6/1/2021</h1>
-  <div id="allocation"></div>
-  <div id="index"></div>
-  <div id="ind_stocks"></div>
-  <div id="option"></div>
-
-  <!-- Reference: https://www.d3-graph-gallery.com/graph/pie_annotation.html -->
-	<script>
-    const allocation_data = {
-      "Index Fund": 327,
-      "Individual Stocks": 556,
-      "Option": 123,
-      "Cash": 172
-    }
-    const index_data = {
-      "FXAIX": 217, 
-      "FZILX": 51,  
-      "FHKCX": 27,
-      "ARKK": 32
-    }
-    const ind_stocks_data = {
-      "XIACY": 18,
-      "RZZRY": 8,
-      "NIO": 54.75, 
-      "BILI": 39.44, 
-      "PLTR": 151,
-      "SQ": 24.60, 
-      "AAPL": 30.60, 
-      "TWLO": 44.125, 
-      "BABA": 24,
-      "DIS": 26.8,
-      "OPEN": 42.4,
-      "ESTC": 27,
-      "TME": 14,
-      "QTT": 9,
-      "COST": 16,
-      "QIPT": 5,
-      "GOOGL": 23,
-      "GME": 0.2
-    }
-    const option_data = {
-      "ARKK": 10,
-      "BABA": 34,
-      "APPL": 31, 
-      "PLTR": 45,
-      "BBW": 3
-    }
-
-    function creatPieChart(name, width, height, radius, data) {
-      var svg = d3.select("#" + name)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-
-      var color = d3.scaleOrdinal().domain(data).range(d3.schemeSet2)
-      var pie = d3.pie().value((d) => d.value)
-      var data_ready = pie(d3.entries(data))
-
-      var arcGenerator = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius)
-
-      svg.selectAll("mySlices")
-        .data(data_ready)
-        .enter()
-        .append("path")
-        .attr("d", arcGenerator)
-        .attr("fill", (d) => color(d.data.key))
-        .attr("stroke", "black")
-        .style("stroke-width", "2px")
-        .style("opacity", 0.7)
-
-      svg.selectAll("mySlices")
-        .data(data_ready)
-        .enter()
-        .append("text")
-        .text((d) => d.data.key)
-        .attr("transform", (d) => "translate(" + arcGenerator.centroid(d) + ")")
-        .style("text-anchor", "middle")
-        .style("font-size", 20)
-    }
-    
-    creatPieChart("allocation", 800, 800, 400, allocation_data)
-    creatPieChart("index", 800, 800, 400, index_data)
-    creatPieChart("ind_stocks", 800, 800, 400, ind_stocks_data)
-    creatPieChart("option", 800, 800, 400, option_data)
-
-	</script> 
-</body> 
-
+    <head>
+        <meta charset="UTF-8"/>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    </head>
+    <body>
+      <h1>Current Holdings - 7/1/2021</h1>
+      <div id="allocationPie"></div>
+      <div id="symbolsTable"></div>
+      <script type='text/javascript' src='portfolio.js'></script>
+    </body>
 </html>

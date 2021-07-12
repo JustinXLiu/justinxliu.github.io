@@ -1,0 +1,41 @@
+[
+  {"Type": "Index", "Symbol": "ARKK", "Cost": 37.48},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 31.24},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 230.76},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 55},
+
+  {"Type": "Stock", "Symbol": "BILI", "Cost": 39.4},
+  {"Type": "Stock", "Symbol": "ESTC", "Cost": 23},
+  {"Type": "Stock", "Symbol": "GME", "Cost": 0.2},
+  {"Type": "Stock", "Symbol": "OPEN", "Cost": 42},
+  {"Type": "Stock", "Symbol": "QTT", "Cost": 9.2},
+  {"Type": "Stock", "Symbol": "RZZRY", "Cost": 7.74},
+  {"Type": "Stock", "Symbol": "TME", "Cost": 13.56},
+
+  {"Type": "Stock", "Symbol": "AAPL", "Cost": 30.7},
+  {"Type": "Stock", "Symbol": "BABA", "Cost": 24.48},
+  {"Type": "Stock", "Symbol": "BB", "Cost": 7.08},
+  {"Type": "Stock", "Symbol": "COST", "Cost": 16.18},
+  {"Type": "Stock", "Symbol": "DIS", "Cost": 26.83},
+  {"Type": "Stock", "Symbol": "GOOGL", "Cost": 22.9},
+  {"Type": "Stock", "Symbol": "NIO", "Cost": 54.74},
+  {"Type": "Stock", "Symbol": "PLTR", "Cost": 163.11},
+  {"Type": "Stock", "Symbol": "SQ", "Cost": 24.61},
+  {"Type": "Stock", "Symbol": "TWLO", "Cost": 44.13},
+  {"Type": "Stock", "Symbol": "WISH", "Cost": 5.717},
+  {"Type": "Stock", "Symbol": "XIACY", "Cost": 17.7},
+
+  {"Type": "Index Option", "Symbol": "ARKK", "Cost": 12.45},
+
+  {"Type": "Stock Option", "Symbol": "AAPL", "Cost": 39.59},
+  {"Type": "Stock Option", "Symbol": "BABA", "Cost": 34},
+  {"Type": "Stock Option", "Symbol": "BARK", "Cost": 14.4},
+  {"Type": "Stock Option", "Symbol": "BBW", "Cost": 1.81},
+  {"Type": "Stock Option", "Symbol": "OPEN", "Cost": 6.64},
+  {"Type": "Stock Option", "Symbol": "PLTR", "Cost": 43.8},
+  {"Type": "Stock Option", "Symbol": "WKHS", "Cost": 10},
+  {"Type": "Stock Option", "Symbol": "BB", "Cost": 10},
+  {"Type": "Stock Option", "Symbol": "WISH", "Cost": 9.41},
+
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 125}
+]
