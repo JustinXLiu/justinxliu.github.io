@@ -24,6 +24,7 @@
   {"Type": "Stock", "Symbol": "TWLO", "Cost": 44.13},
   {"Type": "Stock", "Symbol": "WISH", "Cost": 5.717},
   {"Type": "Stock", "Symbol": "XIACY", "Cost": 17.7},
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 787.11},
 
   {"Type": "Index Option", "Symbol": "ARKK", "Cost": 12.45},
 
@@ -36,6 +37,11 @@
   {"Type": "Stock Option", "Symbol": "WKHS", "Cost": 10},
   {"Type": "Stock Option", "Symbol": "BB", "Cost": 10},
   {"Type": "Stock Option", "Symbol": "WISH", "Cost": 9.41},
+
+  {"Type": "Crypto", "Symbol": "BTC", "Cost": 2.1},
+  {"Type": "Crypto", "Symbol": "DOGE", "Cost": 2.5},
+  {"Type": "Crypto", "Symbol": "ETH", "Cost": 2.5},
+  {"Type": "Crypto", "Symbol": "MM", "Cost": 5.36},
 
   {"Type": "Cash", "Symbol": "CASH", "Cost": 125}
 ]
