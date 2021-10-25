@@ -1,11 +1,10 @@
 [
   {"Type": "Index", "Symbol": "ARKK", "Cost": 37.48},
-  {"Type": "Index", "Symbol": "FHKCX", "Cost": 31.24},
-  {"Type": "Index", "Symbol": "FXAIX", "Cost": 230.76},
-  {"Type": "Index", "Symbol": "FZILX", "Cost": 55},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 37.74},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 251.52},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 61.54},
 
   {"Type": "Stock", "Symbol": "BILI", "Cost": 39.4},
-  {"Type": "Stock", "Symbol": "ESTC", "Cost": 23},
   {"Type": "Stock", "Symbol": "GME", "Cost": 0.2},
   {"Type": "Stock", "Symbol": "OPEN", "Cost": 42},
   {"Type": "Stock", "Symbol": "QTT", "Cost": 9.2},
@@ -24,14 +23,13 @@
   {"Type": "Stock", "Symbol": "TWLO", "Cost": 44.13},
   {"Type": "Stock", "Symbol": "WISH", "Cost": 5.717},
   {"Type": "Stock", "Symbol": "XIACY", "Cost": 17.7},
-  {"Type": "Stock", "Symbol": "WDAY", "Cost": 787.11},
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 789},
 
   {"Type": "Index Option", "Symbol": "ARKK", "Cost": 12.45},
 
   {"Type": "Stock Option", "Symbol": "AAPL", "Cost": 39.59},
   {"Type": "Stock Option", "Symbol": "BABA", "Cost": 34},
-  {"Type": "Stock Option", "Symbol": "BARK", "Cost": 14.4},
-  {"Type": "Stock Option", "Symbol": "BBW", "Cost": 1.81},
+  {"Type": "Stock Option", "Symbol": "BARK", "Cost": 21.1},
   {"Type": "Stock Option", "Symbol": "OPEN", "Cost": 6.64},
   {"Type": "Stock Option", "Symbol": "PLTR", "Cost": 43.8},
   {"Type": "Stock Option", "Symbol": "WKHS", "Cost": 10},
@@ -43,5 +41,5 @@
   {"Type": "Crypto", "Symbol": "ETH", "Cost": 2.5},
   {"Type": "Crypto", "Symbol": "MM", "Cost": 5.36},
 
-  {"Type": "Cash", "Symbol": "CASH", "Cost": 125}
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 231}
 ]
