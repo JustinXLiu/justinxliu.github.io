@@ -81,7 +81,7 @@ function createPieChart(id, data) {
 }
 
 function createTable(id, data) {
-    const columns = ["Symbol", "Cost %", "Cost"]
+    const columns = ["Symbol", "Cost %"]
     const symbolTableData = data.reduce(function(res, curr) {
         const sum = data.reduce(function(sum, curr) {
             return sum + curr.Cost
@@ -89,14 +89,14 @@ function createTable(id, data) {
         const curr_symbols = res.map(r => r.Symbol)
         if (curr_symbols.includes(curr.Symbol)) {
             const row = res.find( ({ Symbol }) => Symbol === curr.Symbol)
-            row["Cost %"] += (curr.Cost * 100 / sum).toFixed(2)
-            row["Cost"] += curr.Cost
+            row["Cost"] += (curr.Cost * 100 / sum)
+            row["Cost %"] = row["Cost"].toFixed(2)
         }
         else {
             const row = {}
             row["Symbol"] = curr.Symbol
-            row["Cost %"] = (curr.Cost * 100 / sum).toFixed(2)
-            row["Cost"] = curr.Cost
+            row["Cost"] = (curr.Cost * 100 / sum)
+            row["Cost %"] = row["Cost"].toFixed(2)
             res.push(row)
         }
         console.log("Total Cost: " + sum)
