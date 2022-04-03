@@ -8,10 +8,9 @@
   {"Type": "Stock", "Symbol": "OPEN", "Cost": 42},
   {"Type": "Stock", "Symbol": "AAPL", "Cost": 30.7},
   {"Type": "Stock", "Symbol": "BABA", "Cost": 78},
-  {"Type": "Stock", "Symbol": "BB", "Cost": 7.08},
   {"Type": "Stock", "Symbol": "COST", "Cost": 16.18},
   {"Type": "Stock", "Symbol": "DIS", "Cost": 26.83},
-  {"Type": "Stock", "Symbol": "GOOGL", "Cost": 37},
+  {"Type": "Stock", "Symbol": "GOOGL", "Cost": 63.7},
   {"Type": "Stock", "Symbol": "NIO", "Cost": 54.74},
   {"Type": "Stock", "Symbol": "PLTR", "Cost": 280},
   {"Type": "Stock", "Symbol": "SQ", "Cost": 40.4},
@@ -43,5 +42,5 @@
   {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 25.6},
   {"Type": "Crypto", "Symbol": "NFT", "Cost": 10},
 
-  {"Type": "Cash", "Symbol": "CASH", "Cost": 194}
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 215}
 ]
