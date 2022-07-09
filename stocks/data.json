@@ -1,14 +1,13 @@
 [
   {"Type": "Index", "Symbol": "ARKK", "Cost": 37},
-  {"Type": "Index", "Symbol": "FHKCX", "Cost": 57.5},
-  {"Type": "Index", "Symbol": "FXAIX", "Cost": 297.5},
-  {"Type": "Index", "Symbol": "FZILX", "Cost": 78.5},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 65},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 321},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 86},
 
   {"Type": "Stock", "Symbol": "GME", "Cost": 0.2},
   {"Type": "Stock", "Symbol": "OPEN", "Cost": 42},
   {"Type": "Stock", "Symbol": "AAPL", "Cost": 30.7},
   {"Type": "Stock", "Symbol": "BABA", "Cost": 78},
-  {"Type": "Stock", "Symbol": "COST", "Cost": 16.18},
   {"Type": "Stock", "Symbol": "DIS", "Cost": 26.83},
   {"Type": "Stock", "Symbol": "GOOGL", "Cost": 63.7},
   {"Type": "Stock", "Symbol": "NIO", "Cost": 54.74},
@@ -21,26 +20,20 @@
   {"Type": "Stock", "Symbol": "MA", "Cost": 7.4},
   {"Type": "Stock", "Symbol": "SHOP", "Cost": 6.8},
   {"Type": "Stock", "Symbol": "TSLA", "Cost": 3.45},
-  {"Type": "Stock", "Symbol": "ADBE", "Cost": 2.4},
-  {"Type": "Stock", "Symbol": "ADSK", "Cost": 1.51},
-  {"Type": "Stock", "Symbol": "WDAY", "Cost": 695},
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 734},
+  {"Type": "Stock", "Symbol": "BRK-B", "Cost": 6.75},
 
   {"Type": "Index Option", "Symbol": "ARKK", "Cost": 12.45},
 
-  {"Type": "Stock Option", "Symbol": "AAPL", "Cost": 24},
-  {"Type": "Stock Option", "Symbol": "BABA", "Cost": 34},
   {"Type": "Stock Option", "Symbol": "BARK", "Cost": 6.7},
-  {"Type": "Stock Option", "Symbol": "OPEN", "Cost": 6.64},
-  {"Type": "Stock Option", "Symbol": "PLTR", "Cost": 49},
+  {"Type": "Stock Option", "Symbol": "PLTR", "Cost": 29},
   {"Type": "Stock Option", "Symbol": "BB", "Cost": 10},
   {"Type": "Index Option", "Symbol": "MU", "Cost": 12.4},
   {"Type": "Index Option", "Symbol": "RBLX", "Cost": 10.4},
-  {"Type": "Index Option", "Symbol": "BLND", "Cost": 5},
   {"Type": "Index Option", "Symbol": "CRM", "Cost": 24},
   {"Type": "Index Option", "Symbol": "DIS", "Cost": 16},
 
-  {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 25.6},
-  {"Type": "Crypto", "Symbol": "NFT", "Cost": 10},
+  {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 39},
 
-  {"Type": "Cash", "Symbol": "CASH", "Cost": 215}
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 204}
 ]
