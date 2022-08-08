@@ -1,14 +1,13 @@
 [
-  {"Type": "Index", "Symbol": "ARKK", "Cost": 37},
-  {"Type": "Index", "Symbol": "FHKCX", "Cost": 65},
-  {"Type": "Index", "Symbol": "FXAIX", "Cost": 321},
-  {"Type": "Index", "Symbol": "FZILX", "Cost": 86},
+  {"Type": "Index", "Symbol": "ARKK", "Cost": 49},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 67.5},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 328.4},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 88.6},
 
   {"Type": "Stock", "Symbol": "GME", "Cost": 0.2},
   {"Type": "Stock", "Symbol": "OPEN", "Cost": 42},
-  {"Type": "Stock", "Symbol": "AAPL", "Cost": 30.7},
   {"Type": "Stock", "Symbol": "BABA", "Cost": 78},
-  {"Type": "Stock", "Symbol": "DIS", "Cost": 26.83},
+  {"Type": "Stock", "Symbol": "DIS", "Cost": 26.8},
   {"Type": "Stock", "Symbol": "GOOGL", "Cost": 63.7},
   {"Type": "Stock", "Symbol": "NIO", "Cost": 54.74},
   {"Type": "Stock", "Symbol": "PLTR", "Cost": 280},
@@ -19,9 +18,8 @@
   {"Type": "Stock", "Symbol": "NVDA", "Cost": 7.5},
   {"Type": "Stock", "Symbol": "MA", "Cost": 7.4},
   {"Type": "Stock", "Symbol": "SHOP", "Cost": 6.8},
-  {"Type": "Stock", "Symbol": "TSLA", "Cost": 3.45},
   {"Type": "Stock", "Symbol": "WDAY", "Cost": 734},
-  {"Type": "Stock", "Symbol": "BRK-B", "Cost": 6.75},
+  {"Type": "Stock", "Symbol": "BRK-B", "Cost": 11.8},
 
   {"Type": "Index Option", "Symbol": "ARKK", "Cost": 12.45},
 
@@ -31,9 +29,8 @@
   {"Type": "Index Option", "Symbol": "MU", "Cost": 12.4},
   {"Type": "Index Option", "Symbol": "RBLX", "Cost": 10.4},
   {"Type": "Index Option", "Symbol": "CRM", "Cost": 24},
-  {"Type": "Index Option", "Symbol": "DIS", "Cost": 16},
 
   {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 39},
 
-  {"Type": "Cash", "Symbol": "CASH", "Cost": 204}
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 195}
 ]
