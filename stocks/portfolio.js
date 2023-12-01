@@ -11,7 +11,7 @@ function createPieChart(id, data) {
     }, {})
 
     const width = 600
-    const height = 600
+    const height = 400
     const radius = 200
 
     const svg = d3.select("#" + id)
@@ -81,7 +81,7 @@ function createPieChart(id, data) {
 }
 
 function createTable(id, data) {
-    const columns = ["Symbol", "Cost %"]
+    const columns = ["Symbol", "Cost %", "Type"]
     const symbolTableData = data.reduce(function(res, curr) {
         const sum = data.reduce(function(sum, curr) {
             return sum + curr.Cost
@@ -91,15 +91,16 @@ function createTable(id, data) {
             const row = res.find( ({ Symbol }) => Symbol === curr.Symbol)
             row["Cost"] += (curr.Cost * 100 / sum)
             row["Cost %"] = row["Cost"].toFixed(2)
+            row["Type"] = curr.Type
         }
         else {
             const row = {}
             row["Symbol"] = curr.Symbol
             row["Cost"] = (curr.Cost * 100 / sum)
             row["Cost %"] = row["Cost"].toFixed(2)
+            row["Type"] = curr.Type
             res.push(row)
         }
-        console.log("Total Cost: " + sum)
         return res
     }, [])
 
