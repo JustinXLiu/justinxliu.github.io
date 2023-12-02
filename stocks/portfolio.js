@@ -1,12 +1,30 @@
 d3.json("data.json").then(function(data) {
-    createPieChart("allocationPie", data)
-    createTable("symbolsTable", data)
+    createPieChart("allocationCostPie", data)
+    createTable("symbolsTable", data, true)
+    createPieChart("allocationIndexPie", data, "Index")
+    createPieChart("allocationStockPie", data, "Stock")
+    createPieChart("allocationIndexPieActual", data, "Index", true)
+    createPieChart("allocationStockPieActual", data, "Stock", true)
 })
 
 // https://www.d3-graph-gallery.com/graph/donut_label.html
-function createPieChart(id, data) {
+function createPieChart(id, data, type = null, isActual = false) {
+    if (type != null) {
+        data = data.filter(function(d) { 
+            return d.Type == type
+        })
+    }
     const typePieData = data.reduce(function(res, curr) {
-        res[curr.Type] ? res[curr.Type] += curr.Cost : res[curr.Type] = curr.Cost
+        if (isActual) {
+            res[curr.Type] ? res[curr.Type] += curr.Actual : res[curr.Type] = curr.Actual
+        }
+        else {
+            res[curr.Type] ? res[curr.Type] += curr.Cost : res[curr.Type] = curr.Cost
+        }
+        return res
+    }, {})
+    const symbolPieData = data.reduce(function(res, curr) {
+        res[curr.Symbol] = isActual ? curr.Actual : curr.Cost
         return res
     }, {})
 
@@ -28,7 +46,7 @@ function createPieChart(id, data) {
         .sort(null) // Do not sort group by size
         .value(function(d) {return d.value; })
 
-    const data_ready = pie(d3.entries(typePieData))
+    const data_ready = type == null ? pie(d3.entries(typePieData)) : pie(d3.entries(symbolPieData))
     const arc = d3.arc()
         .innerRadius(radius * 0.3)
         .outerRadius(radius * 0.8)
@@ -80,30 +98,40 @@ function createPieChart(id, data) {
         })
 }
 
-function createTable(id, data) {
-    const columns = ["Symbol", "Cost %", "Type"]
+function createTable(id, data, showActual = false) {
+    const columns = showActual ? ["Symbol", "Cost %", "Actual %", "Type"]
+        : ["Symbol", "Cost %", "Type"]
     const symbolTableData = data.reduce(function(res, curr) {
-        const sum = data.reduce(function(sum, curr) {
+        const cost_sum = data.reduce(function(sum, curr) {
             return sum + curr.Cost
         }, 0)
+        const actual_sum = data.reduce(function(sum, curr) {
+            return sum + curr.Actual
+        }, 0)
+
         const curr_symbols = res.map(r => r.Symbol)
         if (curr_symbols.includes(curr.Symbol)) {
             const row = res.find( ({ Symbol }) => Symbol === curr.Symbol)
-            row["Cost"] += (curr.Cost * 100 / sum)
+            row["Cost"] += (curr.Cost * 100 / cost_sum)
             row["Cost %"] = row["Cost"].toFixed(2)
+            row["Actual"] += (curr.Actual * 100 / actual_sum)
+            row["Actual %"] = row["Actual"].toFixed(2)
             row["Type"] = curr.Type
         }
         else {
             const row = {}
             row["Symbol"] = curr.Symbol
-            row["Cost"] = (curr.Cost * 100 / sum)
+            row["Cost"] = (curr.Cost * 100 / cost_sum)
             row["Cost %"] = row["Cost"].toFixed(2)
+            row["Actual"] = (curr.Actual * 100 / actual_sum)
+            row["Actual %"] = row["Actual"].toFixed(2)
             row["Type"] = curr.Type
             res.push(row)
         }
+        console.log(res)
         return res
     }, [])
-
+    console.log(symbolTableData)
     const table = d3.select('#' + id).append('table')
     table.append('thead')
         .append('tr')
