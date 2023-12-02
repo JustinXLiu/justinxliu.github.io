@@ -1,5 +1,5 @@
 d3.json("data.json").then(function(data) {
-    createPieChart("allocationCostPie", data)
+    createPieChart("allocationCostPie", data, null, false)
     createTable("symbolsTable", data, true)
     createPieChart("allocationIndexPie", data, "Index")
     createPieChart("allocationStockPie", data, "Stock")
@@ -8,7 +8,7 @@ d3.json("data.json").then(function(data) {
 })
 
 // https://www.d3-graph-gallery.com/graph/donut_label.html
-function createPieChart(id, data, type = null, isActual = false) {
+function createPieChart(id, data, type, isActual) {
     if (type != null) {
         data = data.filter(function(d) { 
             return d.Type == type
@@ -128,10 +128,8 @@ function createTable(id, data, showActual = false) {
             row["Type"] = curr.Type
             res.push(row)
         }
-        console.log(res)
         return res
     }, [])
-    console.log(symbolTableData)
     const table = d3.select('#' + id).append('table')
     table.append('thead')
         .append('tr')
