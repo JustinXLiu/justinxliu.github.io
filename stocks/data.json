@@ -1,21 +1,22 @@
 [
-  {"Type": "Index", "Symbol": "ARKK", "Cost": 49, "Actual": 25},
-  {"Type": "Index", "Symbol": "FHKCX", "Cost": 108, "Actual": 94},
-  {"Type": "Index", "Symbol": "FXAIX", "Cost": 440, "Actual": 597},
-  {"Type": "Index", "Symbol": "FZILX", "Cost": 141, "Actual": 149},
-  {"Type": "Index", "Symbol": "BRK-B", "Cost": 51, "Actual": 51},
+  {"Type": "Index", "Symbol": "ARKK", "Cost": 49, "Actual": 30},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 140, "Actual": 150},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 522, "Actual": 876},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 187, "Actual": 211},
+  {"Type": "Index", "Symbol": "BRK-B", "Cost": 66, "Actual": 100},
 
-  {"Type": "Stock", "Symbol": "OPEN", "Cost": 42, "Actual": 5},
-  {"Type": "Stock", "Symbol": "BABA", "Cost": 78, "Actual": 37},
-  {"Type": "Stock", "Symbol": "DIS", "Cost": 66, "Actual": 46},
-  {"Type": "Stock", "Symbol": "NIO", "Cost": 55, "Actual": 10},
-  {"Type": "Stock", "Symbol": "PLTR", "Cost": 199, "Actual": 202},
-  {"Type": "Stock", "Symbol": "SQ", "Cost": 40, "Actual": 16},
-  {"Type": "Stock", "Symbol": "TWLO", "Cost": 63, "Actual": 16},
-  {"Type": "Stock", "Symbol": "WDAY", "Cost": 440, "Actual": 918},
+  {"Type": "Stock", "Symbol": "OPEN", "Cost": 42, "Actual": 3},
+  {"Type": "Stock", "Symbol": "BABA", "Cost": 78, "Actual": 45},
+  {"Type": "Stock", "Symbol": "DIS", "Cost": 66, "Actual": 60},
+  {"Type": "Stock", "Symbol": "NIO", "Cost": 55, "Actual": 7},
+  {"Type": "Stock", "Symbol": "PLTR", "Cost": 131, "Actual": 503},
+  {"Type": "Stock", "Symbol": "SQ", "Cost": 40, "Actual": 22},
+  {"Type": "Stock", "Symbol": "TWLO", "Cost": 44, "Actual": 13},
 
-  {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 39, "Actual": 17},
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 500, "Actual": 902},
 
-  {"Type": "Cash", "Symbol": "CASH", "Cost": 887, "Actual": 887},
-  {"Type": "Bond", "Symbol": "BOND", "Cost": 223, "Actual": 223}
+  {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 39, "Actual": 29},
+
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 1311, "Actual": 1311},
+  {"Type": "Bond", "Symbol": "BOND", "Cost": 465, "Actual": 465}
 ]
