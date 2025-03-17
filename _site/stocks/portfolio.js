@@ -1,11 +1,32 @@
-d3.json("data.json").then(function(data) {
-    createPieChart("allocationCostPie", data, null, false)
-    createTable("symbolsTable", data, true)
-    createPieChart("allocationIndexPie", data, "Index")
-    createPieChart("allocationStockPie", data, "Stock")
-    createPieChart("allocationIndexPieActual", data, "Index", true)
-    createPieChart("allocationStockPieActual", data, "Stock", true)
-})
+document.getElementById('jsonDropdown').addEventListener('change', function() {
+    const selectedFile = this.value
+    loadJsonData(selectedFile)
+});
+
+// Set a default value and load the corresponding JSON data when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const defaultFile = '../data/3_14_25.json';
+    document.getElementById('jsonDropdown').value = defaultFile;
+    loadJsonData(defaultFile);
+});
+
+function loadJsonData(file) {
+    d3.json(file).then(function(data) {
+        d3.select("#allocationCostPie").html("") // Clear previous pie chart
+        d3.select("#symbolsTable").html("")
+        d3.select("#allocationIndexPie").html("")
+        d3.select("#allocationStockPie").html("")
+        d3.select("#allocationIndexPieActual").html("")
+        d3.select("#allocationStockPieActual").html("")
+
+        createPieChart("allocationCostPie", data, null, false)
+        createTable("symbolsTable", data, true)
+        createPieChart("allocationIndexPie", data, "Index")
+        createPieChart("allocationStockPie", data, "Stock")
+        createPieChart("allocationIndexPieActual", data, "Index", true)
+        createPieChart("allocationStockPieActual", data, "Stock", true)
+    });
+}
 
 // https://www.d3-graph-gallery.com/graph/donut_label.html
 function createPieChart(id, data, type, isActual) {
@@ -28,23 +49,23 @@ function createPieChart(id, data, type, isActual) {
         return res
     }, {})
 
-    const width = 600
-    const height = 400
-    const radius = 200
+    const width = window.innerWidth * 0.5
+    const height = window.innerHeight * 0.5
+    const radius = Math.min(width, height) * 0.4
 
     const svg = d3.select("#" + id)
         .append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
 
     const color = d3.scaleOrdinal()
-        .range(d3.schemeDark2);
+        .range(d3.schemeDark2)
 
     const pie = d3.pie()
         .sort(null) // Do not sort group by size
-        .value(function(d) {return d.value; })
+        .value(function(d) {return d.value })
 
     const data_ready = type == null ? pie(d3.entries(typePieData)) : pie(d3.entries(symbolPieData))
     const arc = d3.arc()
@@ -75,9 +96,9 @@ function createPieChart(id, data, type, isActual) {
         .attr('points', function(d) {
             const posA = arc.centroid(d) // line insertion in the slice
             const posB = outerArc.centroid(d) // line break: we use the other arc generator that has been built only for that
-            const posC = outerArc.centroid(d); // Label position = almost the same as posB
+            const posC = outerArc.centroid(d) // Label position = almost the same as posB
             const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2 // we need the angle to see if the X position will be at the extreme right or extreme left
-            posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1); // multiply by 1 or -1 to put it on the right or on the left
+            posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1) // multiply by 1 or -1 to put it on the right or on the left
             return [posA, posB, posC]
         })
 
@@ -87,10 +108,10 @@ function createPieChart(id, data, type, isActual) {
         .append('text')
         .text( function(d) {return d.data.key } )
         .attr('transform', function(d) {
-            var pos = outerArc.centroid(d);
+            var pos = outerArc.centroid(d)
             var midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
-            pos[0] = radius * 0.99 * (midangle < Math.PI ? 1 : -1);
-            return 'translate(' + pos + ')';
+            pos[0] = radius * 0.99 * (midangle < Math.PI ? 1 : -1)
+            return 'translate(' + pos + ')'
         })
         .style('text-anchor', function(d) {
             const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
@@ -130,33 +151,33 @@ function createTable(id, data, showActual = false) {
         }
         return res
     }, [])
-    const table = d3.select('#' + id).append('table')
-    table.append('thead')
-        .append('tr')
+
+    const table = d3.select('#' + id).append('table').attr('class', 'table')
+    const thead = table.append('thead')
+    const tbody = table.append('tbody')
+    // Append the header row
+    thead.append('tr')
         .selectAll('th')
         .data(columns)
         .enter()
         .append('th')
-        .text(function (column) { return column });
+        .text(column => column)
 
-    const rows = table.append('tbody')
-        .selectAll('tr')
+    // Create a row for each object in the data
+    const rows = tbody.selectAll('tr')
         .data(symbolTableData)
         .enter()
         .append('tr')
+
+    // Create a cell in each row for each column
     rows.selectAll('td')
-        .data(function (row) {
-            return columns.map(function (column) {
-                return {column: column, value: row[column]};
-            });
-        })
+        .data(row => columns.map(column => ({ column: column, value: row[column] })))
         .enter()
         .append('td')
-        .text(function (d) { return d.value; })
+        .text(d => d.value)
 
-    rows.sort(function (a, b) {
-        return b.Cost - a.Cost
-    })
+    // Sort rows by Cost
+    rows.sort((a, b) => b.Cost - a.Cost)
 
-    return table;
+    return table
 }

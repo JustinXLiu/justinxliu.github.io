@@ -14,25 +14,33 @@ layout: default
                 display: flex;
                 width: 100%;
             }
+
         </style>
     </head>
     <body>
-      <h1>12/1/2024</h1>
-      <h2>Overvall</h2>
-      <div class="container">
-        <div id="allocationCostPie"></div>
-        <div id="symbolsTable"></div>
-      </div>
-      <h2>Cost Basis</h2>
-      <div class="container">
-        <div id="allocationIndexPie"></div>
-        <div id="allocationStockPie"></div>
-      </div>
-      <h2>Market Value</h2>
-      <div class="container">
-        <div id="allocationIndexPieActual"></div>
-        <div id="allocationStockPieActual"></div>
-      </div>
-      <script type='text/javascript' src='portfolio.js'></script>
+        <div>
+            <select id="jsonDropdown">
+                <option value="../data/3_14_25.json">3/14/25</option>
+                <option value="../data/12_1_24.json">12/1/24</option>
+                <option value="../data/12_1_23.json">12/1/23</option>
+              <!-- Add more options as needed -->
+            </select>
+        </div>
+        <h3>Overall</h3>
+        <div class="container">
+            <div id="allocationCostPie"></div>
+            <div id="symbolsTable"></div>
+        </div>
+        <h3>Cost Basis</h3>
+        <div class="container">
+            <div id="allocationIndexPie"></div>
+            <div id="allocationStockPie"></div>
+        </div>
+        <h3>Market Value</h3>
+        <div class="container">
+            <div id="allocationIndexPieActual"></div>
+            <div id="allocationStockPieActual"></div>
+        </div>
+        <script type='text/javascript' src='portfolio.js'></script>
     </body>
 </html>

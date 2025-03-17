@@ -33,8 +33,8 @@
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
               <li> <a href="/">Home</a></li>
-              <li> <a href="/stocks">Stocks</a></li> 
-              <li> <a href="/about">About</a></li>
+              <li> <a href="/allocation">Investment</a></li>
+              <li> <a href="/stocks">Investment (Detailed)</a></li>
             </ul>
           </div>
     </div>
@@ -45,7 +45,29 @@
 
 <div class="row">
     <div>
-        <img src="allmylinks.jpeg" width="472" height="787">
+        <!DOCTYPE html> 
+<html lang="en"> 
+    <head>
+        <meta charset="UTF-8"/>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+        <style>
+            .container {
+                display: flex;
+                width: 100%;
+            }
+
+        </style>
+    </head>
+    <body>
+        <h3>Cost Basis</h3>
+            <div id="costAllocationTimeSeriesChart"></div>
+        <h3>Market Value</h3>
+            <div id="actualAllocationTimeSeriesChart"></div>
+        <script type='text/javascript' src="allocation.js"></script>
+    </body>
+</html>
+
     </div>
 </div>
 
