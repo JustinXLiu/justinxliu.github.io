@@ -5,7 +5,7 @@ document.getElementById('jsonDropdown').addEventListener('change', function() {
 
 // Set a default value and load the corresponding JSON data when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const defaultFile = '../data/3_14_25.json';
+    const defaultFile = '../data/6_13_25.json';
     document.getElementById('jsonDropdown').value = defaultFile;
     loadJsonData(defaultFile);
 });

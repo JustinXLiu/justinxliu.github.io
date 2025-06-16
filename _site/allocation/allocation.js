@@ -1,4 +1,4 @@
-files = ["../data/12_1_23.json", "../data/12_1_24.json", "../data/3_14_25.json"]
+files = ["../data/12_1_23.json", "../data/12_1_24.json", "../data/3_14_25.json", "../data/6_13_25.json"]
 
 Promise.all(files.map(file => d3.json(file))).then(dataArray => {
     const processedData = dataArray.map((data, index) => {
@@ -12,7 +12,6 @@ Promise.all(files.map(file => d3.json(file))).then(dataArray => {
             "Index": { Cost: 0, Actual: 0 },
             "Stock": { Cost: 0, Actual: 0 },
             "Cash+Bond": { Cost: 0, Actual: 0 },
-            "Crypto": { Cost: 0, Actual: 0 }
         };
 
         data.forEach(d => {
@@ -24,10 +23,6 @@ Promise.all(files.map(file => d3.json(file))).then(dataArray => {
                 categories["Cash+Bond"].Cost += d.Cost
                 categories["Cash+Bond"].Actual += d.Actual
             }
-            if (d.Type === "Crypto") {
-                categories["Crypto"].Cost += d.Cost
-                categories["Crypto"].Actual += d.Actual
-            }
         })
 
         return {
@@ -38,8 +33,6 @@ Promise.all(files.map(file => d3.json(file))).then(dataArray => {
             "Index Actual": Math.round((categories["Index"].Actual / totalActual) * 100),
             "Stock Actual": Math.round((categories["Stock"].Actual / totalActual) * 100),
             "Cash Actual": Math.round((categories["Cash+Bond"].Actual / totalActual) * 100),
-            "Crypto Cost": Math.round((categories["Crypto"].Cost / totalCost) * 100),
-            "Crypto Actual": Math.round((categories["Crypto"].Actual / totalActual) * 100)
         }
     })
     createGroupedBarChart(processedData, false, "#costAllocationTimeSeriesChart")
@@ -70,10 +63,10 @@ function createGroupedBarChart(data, isActual, outputId) {
 
     var types = []
     if (isActual) {
-        types = ["Index Actual", "Stock Actual", "Cash Actual", "Crypto Actual"]
+        types = ["Index Actual", "Stock Actual", "Cash Actual"]
     }
     else {
-        types = ["Index Cost", "Stock Cost", "Cash Cost", "Crypto Cost"]
+        types = ["Index Cost", "Stock Cost", "Cash Cost"]
     }
     const color = d3.scaleOrdinal()
         .domain(types)
@@ -127,7 +120,6 @@ function createGroupedBarChart(data, isActual, outputId) {
         { name: "Index Fund", key: "Index" + (isActual ? " Actual" : " Cost") },
         { name: "Individual Stocks", key: "Stock" + (isActual ? " Actual" : " Cost") },
         { name: "Cash & Bonds", key: "Cash" + (isActual ? " Actual" : " Cost") },
-        { name: "Cryptocurrency", key: "Crypto" + (isActual ? " Actual" : " Cost") }
     ];
 
     legend.selectAll("rect")

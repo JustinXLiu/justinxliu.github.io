@@ -1,0 +1,12 @@
+[
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 157, "Actual": 184},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 570, "Actual": 920},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 214, "Actual": 262},
+  {"Type": "Index", "Symbol": "BRK-B", "Cost": 85, "Actual": 120},
+
+  {"Type": "Stock", "Symbol": "PLTR", "Cost": 55, "Actual": 550},
+
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 440, "Actual": 822},
+
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 2631, "Actual": 2631}
+]
