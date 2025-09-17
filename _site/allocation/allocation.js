@@ -1,4 +1,4 @@
-files = ["../data/12_1_23.json", "../data/12_1_24.json", "../data/3_14_25.json", "../data/6_13_25.json"]
+files = ["../data/12_1_23.json", "../data/12_1_24.json", "../data/3_14_25.json", "../data/6_13_25.json", "../data/9_16_25.json"]
 
 Promise.all(files.map(file => d3.json(file))).then(dataArray => {
     const processedData = dataArray.map((data, index) => {
