@@ -1,0 +1,17 @@
+[
+  {"Type": "Index", "Symbol": "ARKK", "Cost": 49, "Actual": 26},
+  {"Type": "Index", "Symbol": "FHKCX", "Cost": 150, "Actual": 173},
+  {"Type": "Index", "Symbol": "FXAIX", "Cost": 543, "Actual": 840},
+  {"Type": "Index", "Symbol": "FZILX", "Cost": 234, "Actual": 211},
+  {"Type": "Index", "Symbol": "BRK-B", "Cost": 70, "Actual": 112},
+
+  {"Type": "Stock", "Symbol": "BABA", "Cost": 78, "Actual": 73},
+  {"Type": "Stock", "Symbol": "PLTR", "Cost": 73, "Actual": 431},
+
+  {"Type": "Stock", "Symbol": "WDAY", "Cost": 558, "Actual": 938},
+
+  {"Type": "Crypto", "Symbol": "CRYPTO", "Cost": 39, "Actual": 17},
+
+  {"Type": "Cash", "Symbol": "CASH", "Cost": 1700, "Actual": 1700},
+  {"Type": "Bond", "Symbol": "BOND", "Cost": 471, "Actual": 471}
+]
