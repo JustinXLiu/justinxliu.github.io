@@ -42,7 +42,6 @@ function PieSection({ title, data, valueKey }: { title: string; data: Holding[];
   const pieData = data.map((d) => ({
     name: d.Symbol,
     value: d[valueKey],
-    percent: formatPercent(d[valueKey], total),
   }));
 
   return (
@@ -93,7 +92,6 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
   const pieData = Object.entries(grouped).map(([name, value]) => ({
     name,
     value,
-    percent: formatPercent(value, total),
   }));
 
   return (
