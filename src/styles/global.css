@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e5e7eb;
+  --grid-color: #e5e7eb;
+  --axis-color: #6b7280;
+}
+
+.dark {
+  --tooltip-bg: #1f2937;
+  --tooltip-border: #374151;
+  --grid-color: #374151;
+  --axis-color: #9ca3af;
+}
