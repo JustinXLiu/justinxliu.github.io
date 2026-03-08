@@ -14,7 +14,9 @@ interface ProcessedRow {
   date: string;
   Index: number;
   Stock: number;
-  'Cash+Bond': number;
+  Crypto: number;
+  Cash: number;
+  Bond: number;
 }
 
 const FILES = [
@@ -30,19 +32,19 @@ const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025'];
 const COLORS = {
   Index: '#3b82f6',
   Stock: '#8b5cf6',
-  'Cash+Bond': '#10b981',
+  Crypto: '#f59e0b',
+  Cash: '#10b981',
+  Bond: '#f97316',
 };
 
 function processData(dataArrays: Holding[][], valueKey: 'Cost' | 'Actual'): ProcessedRow[] {
   return dataArrays.map((data, i) => {
     const total = data.reduce((s, d) => s + d[valueKey], 0);
-    const categories: Record<string, number> = { Index: 0, Stock: 0, 'Cash+Bond': 0 };
+    const categories: Record<string, number> = { Index: 0, Stock: 0, Crypto: 0, Cash: 0, Bond: 0 };
 
     data.forEach((d) => {
-      if (d.Type === 'Index' || d.Type === 'Stock') {
+      if (d.Type in categories) {
         categories[d.Type] += d[valueKey];
-      } else {
-        categories['Cash+Bond'] += d[valueKey];
       }
     });
 
@@ -50,7 +52,9 @@ function processData(dataArrays: Holding[][], valueKey: 'Cost' | 'Actual'): Proc
       date: LABELS[i],
       Index: Math.round((categories.Index / total) * 100),
       Stock: Math.round((categories.Stock / total) * 100),
-      'Cash+Bond': Math.round((categories['Cash+Bond'] / total) * 100),
+      Crypto: Math.round((categories.Crypto / total) * 100),
+      Cash: Math.round((categories.Cash / total) * 100),
+      Bond: Math.round((categories.Bond / total) * 100),
     };
   });
 }
@@ -84,9 +88,11 @@ function AllocationChart({ title, data, subtitle }: { title: string; data: Proce
             }}
           />
           <Legend />
-          <Bar dataKey="Index" stackId="a" fill={COLORS.Index} radius={[0, 0, 0, 0]} />
+          <Bar dataKey="Index" stackId="a" fill={COLORS.Index} />
           <Bar dataKey="Stock" stackId="a" fill={COLORS.Stock} />
-          <Bar dataKey="Cash+Bond" stackId="a" fill={COLORS['Cash+Bond']} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Crypto" stackId="a" fill={COLORS.Crypto} />
+          <Bar dataKey="Cash" stackId="a" fill={COLORS.Cash} />
+          <Bar dataKey="Bond" stackId="a" fill={COLORS.Bond} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -144,33 +150,25 @@ export default function AllocationDashboard() {
             <thead>
               <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
                 <th className="px-6 py-3 font-medium">Date</th>
-                <th className="px-6 py-3 font-medium text-right">Index Funds</th>
-                <th className="px-6 py-3 font-medium text-right">Stocks</th>
-                <th className="px-6 py-3 font-medium text-right">Cash + Bond</th>
+                <th className="px-6 py-3 font-medium text-right">Index</th>
+                <th className="px-6 py-3 font-medium text-right">Stock</th>
+                <th className="px-6 py-3 font-medium text-right">Crypto</th>
+                <th className="px-6 py-3 font-medium text-right">Cash</th>
+                <th className="px-6 py-3 font-medium text-right">Bond</th>
               </tr>
             </thead>
             <tbody>
               {actualData.map((row) => (
                 <tr key={row.date} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-3 font-medium">{row.date}</td>
-                  <td className="px-6 py-3 text-right tabular-nums">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.Index }}></span>
-                      {row.Index}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right tabular-nums">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.Stock }}></span>
-                      {row.Stock}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right tabular-nums">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS['Cash+Bond'] }}></span>
-                      {row['Cash+Bond']}%
-                    </span>
-                  </td>
+                  {(['Index', 'Stock', 'Crypto', 'Cash', 'Bond'] as const).map((key) => (
+                    <td key={key} className="px-6 py-3 text-right tabular-nums">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[key] }}></span>
+                        {row[key]}%
+                      </span>
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>

@@ -24,13 +24,12 @@ const DATA_FILES = [
   { label: 'Dec 1, 2023', file: '/data/12_1_23.json' },
 ];
 
-function formatDollar(value: number) {
-  return `$${value.toLocaleString()}`;
-}
-
-function formatPercent(value: number, total: number) {
-  return `${((value / total) * 100).toFixed(1)}%`;
-}
+const tooltipStyle = {
+  backgroundColor: 'var(--tooltip-bg, #fff)',
+  border: '1px solid var(--tooltip-border, #e5e7eb)',
+  borderRadius: '0.75rem',
+  fontSize: '0.875rem',
+};
 
 const renderCustomLabel = ({ name, percent }: { name: string; percent: number }) => {
   if (percent < 0.03) return null;
@@ -66,19 +65,11 @@ function PieSection({ title, data, valueKey }: { title: string; data: Holding[];
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => formatDollar(value)}
-            contentStyle={{
-              backgroundColor: 'var(--tooltip-bg, #fff)',
-              border: '1px solid var(--tooltip-border, #e5e7eb)',
-              borderRadius: '0.75rem',
-              fontSize: '0.875rem',
-            }}
+            formatter={(value: number) => `${((value / total) * 100).toFixed(1)}%`}
+            contentStyle={tooltipStyle}
           />
         </PieChart>
       </ResponsiveContainer>
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-        Total: {formatDollar(total)}
-      </p>
     </div>
   );
 }
@@ -116,13 +107,8 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => formatDollar(value)}
-            contentStyle={{
-              backgroundColor: 'var(--tooltip-bg, #fff)',
-              border: '1px solid var(--tooltip-border, #e5e7eb)',
-              borderRadius: '0.75rem',
-              fontSize: '0.875rem',
-            }}
+            formatter={(value: number) => `${((value / total) * 100).toFixed(1)}%`}
+            contentStyle={tooltipStyle}
           />
           <Legend />
         </PieChart>
@@ -138,12 +124,12 @@ function HoldingsTable({ data }: { data: Holding[] }) {
   const rows = data
     .map((d) => ({
       ...d,
-      costPct: (d.Cost / totalCost) * 100,
       actualPct: (d.Actual / totalActual) * 100,
-      gainLoss: d.Actual - d.Cost,
       gainLossPct: ((d.Actual - d.Cost) / d.Cost) * 100,
     }))
     .sort((a, b) => b.Actual - a.Actual);
+
+  const totalGainLossPct = ((totalActual - totalCost) / totalCost) * 100;
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -156,8 +142,6 @@ function HoldingsTable({ data }: { data: Holding[] }) {
             <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
               <th className="px-6 py-3 font-medium">Symbol</th>
               <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium text-right">Cost</th>
-              <th className="px-6 py-3 font-medium text-right">Market</th>
               <th className="px-6 py-3 font-medium text-right">Gain/Loss</th>
               <th className="px-6 py-3 font-medium text-right">Weight</th>
             </tr>
@@ -177,12 +161,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
                     {r.Type}
                   </span>
                 </td>
-                <td className="px-6 py-3 text-right tabular-nums">{formatDollar(r.Cost)}</td>
-                <td className="px-6 py-3 text-right tabular-nums">{formatDollar(r.Actual)}</td>
                 <td className={`px-6 py-3 text-right tabular-nums font-medium ${
-                  r.gainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  r.gainLossPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {r.gainLoss >= 0 ? '+' : ''}{formatDollar(r.gainLoss)} ({r.gainLossPct >= 0 ? '+' : ''}{r.gainLossPct.toFixed(1)}%)
+                  {r.gainLossPct >= 0 ? '+' : ''}{r.gainLossPct.toFixed(1)}%
                 </td>
                 <td className="px-6 py-3 text-right tabular-nums">{r.actualPct.toFixed(1)}%</td>
               </tr>
@@ -191,12 +173,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
           <tfoot>
             <tr className="font-semibold border-t border-gray-200 dark:border-gray-700">
               <td className="px-6 py-3" colSpan={2}>Total</td>
-              <td className="px-6 py-3 text-right tabular-nums">{formatDollar(totalCost)}</td>
-              <td className="px-6 py-3 text-right tabular-nums">{formatDollar(totalActual)}</td>
               <td className={`px-6 py-3 text-right tabular-nums ${
-                totalActual - totalCost >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                totalGainLossPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
-                {totalActual - totalCost >= 0 ? '+' : ''}{formatDollar(totalActual - totalCost)} ({(((totalActual - totalCost) / totalCost) * 100).toFixed(1)}%)
+                {totalGainLossPct >= 0 ? '+' : ''}{totalGainLossPct.toFixed(1)}%
               </td>
               <td className="px-6 py-3 text-right">100%</td>
             </tr>

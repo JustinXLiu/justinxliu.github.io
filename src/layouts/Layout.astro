@@ -53,6 +53,14 @@ const currentPath = Astro.url.pathname;
             ]}>
               Allocation
             </a>
+            <a href="/blog/" class:list={[
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              currentPath.startsWith("/blog")
+                ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            ]}>
+              Blog
+            </a>
             <button
               id="theme-toggle"
               class="ml-2 p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -113,6 +121,12 @@ const currentPath = Astro.url.pathname;
               ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           ]}>Allocation</a>
+          <a href="/blog/" class:list={[
+            "block px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+            currentPath.startsWith("/blog")
+              ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          ]}>Blog</a>
         </div>
       </div>
     </nav>
