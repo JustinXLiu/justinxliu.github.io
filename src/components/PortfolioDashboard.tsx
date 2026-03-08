@@ -117,7 +117,12 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
   );
 }
 
+type SortKey = 'Symbol' | 'Type' | 'gainLossPct' | 'actualPct';
+
 function HoldingsTable({ data }: { data: Holding[] }) {
+  const [sortKey, setSortKey] = useState<SortKey>('actualPct');
+  const [sortAsc, setSortAsc] = useState(false);
+
   const totalCost = data.reduce((s, d) => s + d.Cost, 0);
   const totalActual = data.reduce((s, d) => s + d.Actual, 0);
 
@@ -127,9 +132,26 @@ function HoldingsTable({ data }: { data: Holding[] }) {
       actualPct: (d.Actual / totalActual) * 100,
       gainLossPct: ((d.Actual - d.Cost) / d.Cost) * 100,
     }))
-    .sort((a, b) => b.Actual - a.Actual);
+    .sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      const cmp = typeof av === 'string' ? av.localeCompare(bv as string) : (av as number) - (bv as number);
+      return sortAsc ? cmp : -cmp;
+    });
 
   const totalGainLossPct = ((totalActual - totalCost) / totalCost) * 100;
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) setSortAsc((v) => !v);
+    else { setSortKey(key); setSortAsc(false); }
+  }
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (col !== sortKey) return <span className="ml-1 opacity-30">↕</span>;
+    return <span className="ml-1">{sortAsc ? '↑' : '↓'}</span>;
+  }
+
+  const thBase = "px-6 py-3 font-medium cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-200 transition-colors";
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -140,10 +162,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
-              <th className="px-6 py-3 font-medium">Symbol</th>
-              <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium text-right">Gain/Loss</th>
-              <th className="px-6 py-3 font-medium text-right">Weight</th>
+              <th className={thBase} onClick={() => handleSort('Symbol')}>Symbol<SortIcon col="Symbol" /></th>
+              <th className={thBase} onClick={() => handleSort('Type')}>Type<SortIcon col="Type" /></th>
+              <th className={`${thBase} text-right`} onClick={() => handleSort('gainLossPct')}>Gain/Loss<SortIcon col="gainLossPct" /></th>
+              <th className={`${thBase} text-right`} onClick={() => handleSort('actualPct')}>Weight<SortIcon col="actualPct" /></th>
             </tr>
           </thead>
           <tbody>
