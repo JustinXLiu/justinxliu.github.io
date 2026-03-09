@@ -24,13 +24,12 @@ const DATA_FILES = [
   { label: 'Dec 1, 2023', file: '/data/12_1_23.json' },
 ];
 
-function formatDollar(value: number) {
-  return `$${value.toLocaleString()}`;
-}
-
-function formatPercent(value: number, total: number) {
-  return `${((value / total) * 100).toFixed(1)}%`;
-}
+const tooltipStyle = {
+  backgroundColor: 'var(--tooltip-bg, #fff)',
+  border: '1px solid var(--tooltip-border, #e5e7eb)',
+  borderRadius: '0.75rem',
+  fontSize: '0.875rem',
+};
 
 const renderCustomLabel = ({ name, percent }: { name: string; percent: number }) => {
   if (percent < 0.03) return null;
@@ -42,7 +41,6 @@ function PieSection({ title, data, valueKey }: { title: string; data: Holding[];
   const pieData = data.map((d) => ({
     name: d.Symbol,
     value: d[valueKey],
-    percent: formatPercent(d[valueKey], total),
   }));
 
   return (
@@ -67,19 +65,11 @@ function PieSection({ title, data, valueKey }: { title: string; data: Holding[];
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => formatDollar(value)}
-            contentStyle={{
-              backgroundColor: 'var(--tooltip-bg, #fff)',
-              border: '1px solid var(--tooltip-border, #e5e7eb)',
-              borderRadius: '0.75rem',
-              fontSize: '0.875rem',
-            }}
+            formatter={(value: number) => `${((value / total) * 100).toFixed(1)}%`}
+            contentStyle={tooltipStyle}
           />
         </PieChart>
       </ResponsiveContainer>
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-        Total: {formatDollar(total)}
-      </p>
     </div>
   );
 }
@@ -93,7 +83,6 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
   const pieData = Object.entries(grouped).map(([name, value]) => ({
     name,
     value,
-    percent: formatPercent(value, total),
   }));
 
   return (
@@ -118,13 +107,8 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => formatDollar(value)}
-            contentStyle={{
-              backgroundColor: 'var(--tooltip-bg, #fff)',
-              border: '1px solid var(--tooltip-border, #e5e7eb)',
-              borderRadius: '0.75rem',
-              fontSize: '0.875rem',
-            }}
+            formatter={(value: number) => `${((value / total) * 100).toFixed(1)}%`}
+            contentStyle={tooltipStyle}
           />
           <Legend />
         </PieChart>
@@ -133,19 +117,41 @@ function TypePieSection({ title, data, valueKey }: { title: string; data: Holdin
   );
 }
 
+type SortKey = 'Symbol' | 'Type' | 'gainLossPct' | 'actualPct';
+
 function HoldingsTable({ data }: { data: Holding[] }) {
+  const [sortKey, setSortKey] = useState<SortKey>('actualPct');
+  const [sortAsc, setSortAsc] = useState(false);
+
   const totalCost = data.reduce((s, d) => s + d.Cost, 0);
   const totalActual = data.reduce((s, d) => s + d.Actual, 0);
 
   const rows = data
     .map((d) => ({
       ...d,
-      costPct: (d.Cost / totalCost) * 100,
       actualPct: (d.Actual / totalActual) * 100,
-      gainLoss: d.Actual - d.Cost,
       gainLossPct: ((d.Actual - d.Cost) / d.Cost) * 100,
     }))
-    .sort((a, b) => b.Actual - a.Actual);
+    .sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      const cmp = typeof av === 'string' ? av.localeCompare(bv as string) : (av as number) - (bv as number);
+      return sortAsc ? cmp : -cmp;
+    });
+
+  const totalGainLossPct = ((totalActual - totalCost) / totalCost) * 100;
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) setSortAsc((v) => !v);
+    else { setSortKey(key); setSortAsc(false); }
+  }
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (col !== sortKey) return <span className="ml-1 opacity-30">↕</span>;
+    return <span className="ml-1">{sortAsc ? '↑' : '↓'}</span>;
+  }
+
+  const thBase = "px-6 py-3 font-medium cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-200 transition-colors";
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -156,12 +162,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
-              <th className="px-6 py-3 font-medium">Symbol</th>
-              <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium text-right">Cost</th>
-              <th className="px-6 py-3 font-medium text-right">Market</th>
-              <th className="px-6 py-3 font-medium text-right">Gain/Loss</th>
-              <th className="px-6 py-3 font-medium text-right">Weight</th>
+              <th className={thBase} onClick={() => handleSort('Symbol')}>Symbol<SortIcon col="Symbol" /></th>
+              <th className={thBase} onClick={() => handleSort('Type')}>Type<SortIcon col="Type" /></th>
+              <th className={`${thBase} text-right`} onClick={() => handleSort('gainLossPct')}>Gain/Loss<SortIcon col="gainLossPct" /></th>
+              <th className={`${thBase} text-right`} onClick={() => handleSort('actualPct')}>Weight<SortIcon col="actualPct" /></th>
             </tr>
           </thead>
           <tbody>
@@ -179,12 +183,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
                     {r.Type}
                   </span>
                 </td>
-                <td className="px-6 py-3 text-right tabular-nums">{formatDollar(r.Cost)}</td>
-                <td className="px-6 py-3 text-right tabular-nums">{formatDollar(r.Actual)}</td>
                 <td className={`px-6 py-3 text-right tabular-nums font-medium ${
-                  r.gainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  r.gainLossPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {r.gainLoss >= 0 ? '+' : ''}{formatDollar(r.gainLoss)} ({r.gainLossPct >= 0 ? '+' : ''}{r.gainLossPct.toFixed(1)}%)
+                  {r.gainLossPct >= 0 ? '+' : ''}{r.gainLossPct.toFixed(1)}%
                 </td>
                 <td className="px-6 py-3 text-right tabular-nums">{r.actualPct.toFixed(1)}%</td>
               </tr>
@@ -193,12 +195,10 @@ function HoldingsTable({ data }: { data: Holding[] }) {
           <tfoot>
             <tr className="font-semibold border-t border-gray-200 dark:border-gray-700">
               <td className="px-6 py-3" colSpan={2}>Total</td>
-              <td className="px-6 py-3 text-right tabular-nums">{formatDollar(totalCost)}</td>
-              <td className="px-6 py-3 text-right tabular-nums">{formatDollar(totalActual)}</td>
               <td className={`px-6 py-3 text-right tabular-nums ${
-                totalActual - totalCost >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                totalGainLossPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
-                {totalActual - totalCost >= 0 ? '+' : ''}{formatDollar(totalActual - totalCost)} ({(((totalActual - totalCost) / totalCost) * 100).toFixed(1)}%)
+                {totalGainLossPct >= 0 ? '+' : ''}{totalGainLossPct.toFixed(1)}%
               </td>
               <td className="px-6 py-3 text-right">100%</td>
             </tr>
