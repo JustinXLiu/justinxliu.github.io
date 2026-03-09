@@ -1,5 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Astro
+.astro/
+
+# Editor
 .DS_Store
-Gemfile
-Gemfile.lock
-.jekyll-cache
 .idea
+.vscode
+
+# Env
+.env
+.env.*
