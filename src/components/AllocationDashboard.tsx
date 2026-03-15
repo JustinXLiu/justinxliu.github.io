@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, LineChart, Line, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
 interface Holding {
@@ -119,6 +120,11 @@ export default function AllocationDashboard() {
   const costData = processData(dataArrays, 'Cost');
   const actualData = processData(dataArrays, 'Actual');
 
+  const netWorthData = dataArrays.map((data, i) => ({
+    date: LABELS[i],
+    netWorth: data.reduce((s, d) => s + d.Actual, 0),
+  }));
+
   return (
     <div className="space-y-8">
       <div>
@@ -126,6 +132,53 @@ export default function AllocationDashboard() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           How portfolio allocation has shifted over time across snapshots
         </p>
+      </div>
+
+      {/* Net Worth Trend */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold">Net Worth Trend</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Total portfolio market value over time
+          </p>
+        </div>
+        <ResponsiveContainer width="100%" height={350}>
+          <AreaChart data={netWorthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+            />
+            <Tooltip
+              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Net Worth']}
+              contentStyle={{
+                backgroundColor: 'var(--tooltip-bg, #fff)',
+                border: '1px solid var(--tooltip-border, #e5e7eb)',
+                borderRadius: '0.75rem',
+                fontSize: '0.875rem',
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="netWorth"
+              stroke="#3b82f6"
+              strokeWidth={2.5}
+              fill="url(#netWorthGradient)"
+              dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{ r: 7 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
