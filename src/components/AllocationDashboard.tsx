@@ -13,6 +13,7 @@ interface Holding {
 
 interface ProcessedRow {
   date: string;
+  timestamp: number;
   Index: number;
   Stock: number;
   Crypto: number;
@@ -29,7 +30,18 @@ const FILES = [
   '/data/3_14_26.json',
 ];
 
+const DATES = [
+  new Date(2023, 11, 1),
+  new Date(2024, 11, 1),
+  new Date(2025, 2, 14),
+  new Date(2025, 5, 13),
+  new Date(2025, 8, 16),
+  new Date(2026, 2, 14),
+];
+
 const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025', 'Mar 2026'];
+
+const TIMESTAMPS = DATES.map((d) => d.getTime());
 
 const COLORS = {
   Index: '#3b82f6',
@@ -52,6 +64,7 @@ function processData(dataArrays: Holding[][], valueKey: 'Cost' | 'Actual'): Proc
 
     return {
       date: LABELS[i],
+      timestamp: TIMESTAMPS[i],
       Index: Math.round((categories.Index / total) * 100),
       Stock: Math.round((categories.Stock / total) * 100),
       Crypto: Math.round((categories.Crypto / total) * 100),
@@ -69,11 +82,20 @@ function AllocationChart({ title, data, subtitle }: { title: string; data: Proce
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
       </div>
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <BarChart data={data} barSize={40} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" />
           <XAxis
-            dataKey="date"
+            dataKey="timestamp"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
+            ticks={TIMESTAMPS}
+            tickFormatter={(ts) => {
+              const idx = TIMESTAMPS.indexOf(ts);
+              return idx >= 0 ? LABELS[idx] : '';
+            }}
             tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+            padding={{ left: 30, right: 30 }}
           />
           <YAxis
             tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
@@ -81,6 +103,10 @@ function AllocationChart({ title, data, subtitle }: { title: string; data: Proce
             tickFormatter={(v) => `${v}%`}
           />
           <Tooltip
+            labelFormatter={(ts) => {
+              const idx = TIMESTAMPS.indexOf(ts as number);
+              return idx >= 0 ? LABELS[idx] : '';
+            }}
             formatter={(value: number, name: string) => [`${value}%`, name]}
             contentStyle={{
               backgroundColor: 'var(--tooltip-bg, #fff)',
@@ -122,6 +148,7 @@ export default function AllocationDashboard() {
 
   const netWorthData = dataArrays.map((data, i) => ({
     date: LABELS[i],
+    timestamp: TIMESTAMPS[i],
     netWorth: data.reduce((s, d) => s + d.Actual, 0),
   }));
 
@@ -152,7 +179,15 @@ export default function AllocationDashboard() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" />
             <XAxis
-              dataKey="date"
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={['dataMin', 'dataMax']}
+              ticks={TIMESTAMPS}
+              tickFormatter={(ts) => {
+                const idx = TIMESTAMPS.indexOf(ts);
+                return idx >= 0 ? LABELS[idx] : '';
+              }}
               tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
             />
             <YAxis
@@ -160,6 +195,10 @@ export default function AllocationDashboard() {
               tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip
+              labelFormatter={(ts) => {
+                const idx = TIMESTAMPS.indexOf(ts as number);
+                return idx >= 0 ? LABELS[idx] : '';
+              }}
               formatter={(value: number) => [`$${value.toLocaleString()}`, 'Net Worth']}
               contentStyle={{
                 backgroundColor: 'var(--tooltip-bg, #fff)',
