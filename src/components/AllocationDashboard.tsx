@@ -25,9 +25,10 @@ const FILES = [
   '/data/3_14_25.json',
   '/data/6_13_25.json',
   '/data/9_16_25.json',
+  '/data/3_14_26.json',
 ];
 
-const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025'];
+const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025', 'Mar 2026'];
 
 const COLORS = {
   Index: '#3b82f6',
