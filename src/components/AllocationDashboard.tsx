@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, LineChart, Line, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
 interface Holding {
@@ -12,6 +13,7 @@ interface Holding {
 
 interface ProcessedRow {
   date: string;
+  timestamp: number;
   Index: number;
   Stock: number;
   Crypto: number;
@@ -25,9 +27,21 @@ const FILES = [
   '/data/3_14_25.json',
   '/data/6_13_25.json',
   '/data/9_16_25.json',
+  '/data/3_14_26.json',
 ];
 
-const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025'];
+const DATES = [
+  new Date(2023, 11, 1),
+  new Date(2024, 11, 1),
+  new Date(2025, 2, 14),
+  new Date(2025, 5, 13),
+  new Date(2025, 8, 16),
+  new Date(2026, 2, 14),
+];
+
+const LABELS = ['Dec 2023', 'Dec 2024', 'Mar 2025', 'Jun 2025', 'Sep 2025', 'Mar 2026'];
+
+const TIMESTAMPS = DATES.map((d) => d.getTime());
 
 const COLORS = {
   Index: '#3b82f6',
@@ -50,6 +64,7 @@ function processData(dataArrays: Holding[][], valueKey: 'Cost' | 'Actual'): Proc
 
     return {
       date: LABELS[i],
+      timestamp: TIMESTAMPS[i],
       Index: Math.round((categories.Index / total) * 100),
       Stock: Math.round((categories.Stock / total) * 100),
       Crypto: Math.round((categories.Crypto / total) * 100),
@@ -67,11 +82,20 @@ function AllocationChart({ title, data, subtitle }: { title: string; data: Proce
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
       </div>
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <BarChart data={data} barSize={40} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" />
           <XAxis
-            dataKey="date"
+            dataKey="timestamp"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
+            ticks={TIMESTAMPS}
+            tickFormatter={(ts) => {
+              const idx = TIMESTAMPS.indexOf(ts);
+              return idx >= 0 ? LABELS[idx] : '';
+            }}
             tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+            padding={{ left: 30, right: 30 }}
           />
           <YAxis
             tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
@@ -79,6 +103,10 @@ function AllocationChart({ title, data, subtitle }: { title: string; data: Proce
             tickFormatter={(v) => `${v}%`}
           />
           <Tooltip
+            labelFormatter={(ts) => {
+              const idx = TIMESTAMPS.indexOf(ts as number);
+              return idx >= 0 ? LABELS[idx] : '';
+            }}
             formatter={(value: number, name: string) => [`${value}%`, name]}
             contentStyle={{
               backgroundColor: 'var(--tooltip-bg, #fff)',
@@ -118,6 +146,12 @@ export default function AllocationDashboard() {
   const costData = processData(dataArrays, 'Cost');
   const actualData = processData(dataArrays, 'Actual');
 
+  const netWorthData = dataArrays.map((data, i) => ({
+    date: LABELS[i],
+    timestamp: TIMESTAMPS[i],
+    netWorth: data.reduce((s, d) => s + d.Actual, 0),
+  }));
+
   return (
     <div className="space-y-8">
       <div>
@@ -125,6 +159,65 @@ export default function AllocationDashboard() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           How portfolio allocation has shifted over time across snapshots
         </p>
+      </div>
+
+      {/* Net Worth Trend */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold">Net Worth Trend</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Total portfolio market value over time
+          </p>
+        </div>
+        <ResponsiveContainer width="100%" height={350}>
+          <AreaChart data={netWorthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" />
+            <XAxis
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={['dataMin', 'dataMax']}
+              ticks={TIMESTAMPS}
+              tickFormatter={(ts) => {
+                const idx = TIMESTAMPS.indexOf(ts);
+                return idx >= 0 ? LABELS[idx] : '';
+              }}
+              tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: 'var(--axis-color, #6b7280)' }}
+              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+            />
+            <Tooltip
+              labelFormatter={(ts) => {
+                const idx = TIMESTAMPS.indexOf(ts as number);
+                return idx >= 0 ? LABELS[idx] : '';
+              }}
+              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Net Worth']}
+              contentStyle={{
+                backgroundColor: 'var(--tooltip-bg, #fff)',
+                border: '1px solid var(--tooltip-border, #e5e7eb)',
+                borderRadius: '0.75rem',
+                fontSize: '0.875rem',
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="netWorth"
+              stroke="#3b82f6"
+              strokeWidth={2.5}
+              fill="url(#netWorthGradient)"
+              dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{ r: 7 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
