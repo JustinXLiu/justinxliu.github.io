@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
@@ -167,6 +167,38 @@ export default function PortfolioView() {
     };
   }).filter((r) => r.cost > 0 || r.actual > 0);
 
+  // Top holdings by market value (latest snapshot)
+  const topHoldings = [...latest]
+    .sort((a, b) => b.Actual - a.Actual)
+    .slice(0, 8)
+    .map((d) => ({ symbol: d.Symbol, value: Math.round(d.Actual), cost: Math.round(d.Cost) }));
+
+  // Activity inferred from snapshot diffs (stocks only).
+  // buy = new position, sell = removed (amount = last tracked value),
+  // add/trim = cost-basis change. Intra-period trades aren't visible.
+  interface Activity { period: string; action: 'buy' | 'add' | 'trim' | 'sell'; symbol: string; amount: number }
+  const activities: Activity[] = [];
+  for (let i = 1; i < dataArrays.length; i++) {
+    const prev = new Map(dataArrays[i - 1].filter((d) => d.Type === 'Stock').map((d) => [d.Symbol, d]));
+    const period = `${labels[i - 1]} → ${labels[i]}`;
+    dataArrays[i].filter((d) => d.Type === 'Stock').forEach((d) => {
+      const p = prev.get(d.Symbol);
+      if (!p) activities.push({ period, action: 'buy', symbol: d.Symbol, amount: d.Cost });
+      else if (d.Cost - p.Cost > 1) activities.push({ period, action: 'add', symbol: d.Symbol, amount: d.Cost - p.Cost });
+      else if (p.Cost - d.Cost > 1) activities.push({ period, action: 'trim', symbol: d.Symbol, amount: p.Cost - d.Cost });
+      prev.delete(d.Symbol);
+    });
+    prev.forEach((p, sym) => activities.push({ period, action: 'sell', symbol: sym, amount: p.Actual }));
+  }
+  activities.reverse(); // most recent first
+
+  const ACTION_STYLE: Record<Activity['action'], string> = {
+    buy: 'text-emerald-600 dark:text-emerald-400',
+    add: 'text-sky-600 dark:text-sky-400',
+    trim: 'text-amber-600 dark:text-amber-400',
+    sell: 'text-red-600 dark:text-red-400',
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -257,6 +289,55 @@ export default function PortfolioView() {
         </ResponsiveContainer>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
           // cost basis vs market value, by asset type — values in $k as tracked
+        </p>
+      </Card>
+
+      {/* Top holdings */}
+      <Card cmd="holdings --top=8">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={topHoldings} layout="vertical" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" horizontal={false} />
+            <XAxis type="number" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+            <YAxis type="category" dataKey="symbol" tick={tickStyle} tickLine={false} axisLine={false} width={64} />
+            <Tooltip formatter={(v: number) => [fmtK(v), 'value']} contentStyle={tooltipStyle} cursor={{ fill: 'var(--grid-color, #e5e7eb)', opacity: 0.3 }} />
+            <Bar dataKey="value" radius={[0, 3, 3, 0]}>
+              {topHoldings.map((h) => (
+                <Cell key={h.symbol} fill={h.value >= h.cost ? ACCENT : '#f87171'} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          {'// latest snapshot · green = above cost basis, red = below'}
+        </p>
+      </Card>
+
+      {/* Activity */}
+      <Card cmd="activity --stocks --inferred">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs tabular-nums">
+            <thead>
+              <tr className="text-left text-gray-400 dark:text-gray-600 border-b border-gray-200 dark:border-white/10">
+                <th className="py-2 pr-4 font-normal">period</th>
+                <th className="py-2 pr-4 font-normal">action</th>
+                <th className="py-2 pr-4 font-normal">symbol</th>
+                <th className="py-2 font-normal text-right">amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((a, idx) => (
+                <tr key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0">
+                  <td className="py-2 pr-4 text-gray-400 dark:text-gray-600 whitespace-nowrap">{a.period}</td>
+                  <td className={`py-2 pr-4 font-bold ${ACTION_STYLE[a.action]}`}>{a.action}</td>
+                  <td className="py-2 pr-4">{a.symbol}</td>
+                  <td className="py-2 text-right">{fmtK(a.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          {'// inferred from snapshot diffs · sells show last tracked value · intra-period trades aren\'t visible'}
         </p>
       </Card>
     </div>
