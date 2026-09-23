@@ -47,6 +47,7 @@ const ROI_COLOR = '#38bdf8'; // sky
 const SPX_COLOR = '#f59e0b'; // amber — benchmark line
 
 const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
+const fmtK2 = (v: number) => `$${(v / 1000).toFixed(2)}k`; // holdings table: keep sub-$k precision
 const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
 
 const tooltipStyle = {
@@ -168,8 +169,8 @@ export default function PortfolioView() {
     .map((d) => ({
       symbol: d.Symbol,
       type: d.Type,
-      cost: Math.round(d.Cost),
-      value: Math.round(d.Actual),
+      cost: d.Cost,
+      value: d.Actual,
       weight: (d.Actual / latestTotal) * 100,
       roi: d.Cost > 0 ? ((d.Actual - d.Cost) / d.Cost) * 100 : 0,
     }));
@@ -266,8 +267,8 @@ export default function PortfolioView() {
                     {h.symbol}
                     <span className="ml-2 font-normal text-gray-400 dark:text-gray-600">{h.type.toLowerCase()}</span>
                   </td>
-                  <td className="py-2 pr-4 text-right text-gray-400 dark:text-gray-600">{fmtK(h.cost)}</td>
-                  <td className="py-2 pr-4 text-right">{fmtK(h.value)}</td>
+                  <td className="py-2 pr-4 text-right text-gray-400 dark:text-gray-600">{fmtK2(h.cost)}</td>
+                  <td className="py-2 pr-4 text-right">{fmtK2(h.value)}</td>
                   <td className="py-2 pr-4 text-right">{h.weight.toFixed(1)}%</td>
                   <td className={`py-2 text-right font-bold ${h.roi >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                     {fmtPct(h.roi)}
