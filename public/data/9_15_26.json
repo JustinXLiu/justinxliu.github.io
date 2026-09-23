@@ -1,0 +1,50 @@
+[
+  {
+    "Type": "Index",
+    "Symbol": "FHKCX",
+    "Cost": 199,
+    "Actual": 370
+  },
+  {
+    "Type": "Index",
+    "Symbol": "FXAIX",
+    "Cost": 676.5,
+    "Actual": 1315
+  },
+  {
+    "Type": "Index",
+    "Symbol": "FZILX",
+    "Cost": 275,
+    "Actual": 415.6
+  },
+  {
+    "Type": "Index",
+    "Symbol": "BRK-B",
+    "Cost": 839,
+    "Actual": 891
+  },
+  {
+    "Type": "Stock",
+    "Symbol": "PLTR",
+    "Cost": 43.8,
+    "Actual": 616
+  },
+  {
+    "Type": "Stock",
+    "Symbol": "WDAY",
+    "Cost": 719,
+    "Actual": 951
+  },
+  {
+    "Type": "Cash",
+    "Symbol": "CASH",
+    "Cost": 1915,
+    "Actual": 1915
+  },
+  {
+    "Type": "Bond",
+    "Symbol": "BOND",
+    "Cost": 255,
+    "Actual": 238
+  }
+]

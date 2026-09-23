@@ -19,6 +19,7 @@ const SNAPSHOTS = [
   { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime(), spx: 5976.97 },
   { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime(), spx: 6606.76 },
   { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime(), spx: 6632.19 },
+  { label: 'Sep 2026', file: '/data/9_15_26.json', ts: new Date(2026, 8, 15).getTime(), spx: 7585.73 },
 ];
 
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
