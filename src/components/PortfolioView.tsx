@@ -12,18 +12,41 @@ interface Holding {
 }
 
 const SNAPSHOTS = [
-  { label: 'Dec 2023', file: '/data/12_1_23.json', ts: new Date(2023, 11, 1).getTime() },
-  { label: 'Dec 2024', file: '/data/12_1_24.json', ts: new Date(2024, 11, 1).getTime() },
-  { label: 'Mar 2025', file: '/data/3_14_25.json', ts: new Date(2025, 2, 14).getTime() },
-  { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime() },
-  { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime() },
-  { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime() },
+  // spx: S&P 500 close on the snapshot date (nearest trading day; price return, dividends excluded)
+  { label: 'Dec 2023', file: '/data/12_1_23.json', ts: new Date(2023, 11, 1).getTime(), spx: 4594.63 },
+  { label: 'Dec 2024', file: '/data/12_1_24.json', ts: new Date(2024, 11, 1).getTime(), spx: 6032.38 },
+  { label: 'Mar 2025', file: '/data/3_14_25.json', ts: new Date(2025, 2, 14).getTime(), spx: 5638.94 },
+  { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime(), spx: 5976.97 },
+  { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime(), spx: 6606.76 },
+  { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime(), spx: 6632.19 },
 ];
+
+const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
+
+// Money-weighted annualized return (XIRR) via bisection.
+// flows: [timeInYears, amount][] — outflows negative, terminal value positive.
+function xnpv(rate: number, flows: [number, number][]): number {
+  return flows.reduce((s, [t, amt]) => s + amt / Math.pow(1 + rate, t), 0);
+}
+function xirr(flows: [number, number][]): number {
+  let lo = -0.9999, hi = 10;
+  let fLo = xnpv(lo, flows), fHi = xnpv(hi, flows);
+  let guard = 0;
+  while (fLo * fHi > 0 && guard++ < 60) { hi *= 2; fHi = xnpv(hi, flows); }
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    const fMid = xnpv(mid, flows);
+    if (Math.abs(fMid) < 1e-12) return mid;
+    if (fLo * fMid <= 0) { hi = mid; fHi = fMid; } else { lo = mid; fLo = fMid; }
+  }
+  return (lo + hi) / 2;
+}
 
 const TYPES = ['Index', 'Stock', 'Crypto', 'Cash', 'Bond'] as const;
 
 const ACCENT = '#10b981'; // emerald — terminal green
 const ROI_COLOR = '#38bdf8'; // sky
+const SPX_COLOR = '#f59e0b'; // amber — benchmark line
 const COST_COLOR = '#64748b'; // slate
 
 const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
@@ -99,20 +122,37 @@ export default function PortfolioView() {
   const labels = SNAPSHOTS.map((s) => s.label);
 
   // Time series: net worth + total ROI per snapshot
-  const series = dataArrays.map((arr, i) => {
-    const cost = arr.reduce((s, d) => s + d.Cost, 0);
-    const actual = arr.reduce((s, d) => s + d.Actual, 0);
+  const totals = dataArrays.map((arr) => ({
+    cost: arr.reduce((s, d) => s + d.Cost, 0),
+    actual: arr.reduce((s, d) => s + d.Actual, 0),
+  }));
+  const series = totals.map((t, i) => ({
+    ts: SNAPSHOTS[i].ts,
+    netWorth: t.actual,
+    roi: t.cost > 0 ? ((t.actual - t.cost) / t.cost) * 100 : 0,
+  }));
+
+  // Annualized returns since inception: your money-weighted return (XIRR,
+  // treating cost-basis increases as dated deposits) vs S&P 500 CAGR
+  const t0 = SNAPSHOTS[0].ts;
+  const yrs = (i: number) => (SNAPSHOTS[i].ts - t0) / MS_PER_YEAR;
+  const annSeries = totals.slice(1).map((t, k) => {
+    const i = k + 1;
+    const flows: [number, number][] = [[0, -totals[0].cost]];
+    for (let j = 1; j <= i; j++) {
+      flows.push([yrs(j), -(totals[j].cost - totals[j - 1].cost)]);
+    }
+    flows.push([yrs(i), t.actual]);
     return {
-      ts: SNAPSHOTS[i].ts,
-      netWorth: actual,
-      roi: cost > 0 ? ((actual - cost) / cost) * 100 : 0,
+      label: labels[i],
+      you: xirr(flows) * 100,
+      spx: (Math.pow(SNAPSHOTS[i].spx / SNAPSHOTS[0].spx, 1 / yrs(i)) - 1) * 100,
     };
   });
+  const annReturn = annSeries[annSeries.length - 1].you;
 
   const latest = dataArrays[dataArrays.length - 1];
-  const latestCost = latest.reduce((s, d) => s + d.Cost, 0);
   const latestActual = latest.reduce((s, d) => s + d.Actual, 0);
-  const latestRoi = ((latestActual - latestCost) / latestCost) * 100;
   const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
   const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
 
@@ -139,7 +179,7 @@ export default function PortfolioView() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Stat label="net_worth" value={fmtK(latestActual)} sub={`${fmtPct(nwGrowth)} since ${labels[0]}`} positive={nwGrowth >= 0} />
-        <Stat label="total_roi" value={fmtPct(latestRoi)} sub={`on ${fmtK(latestCost)} cost basis`} positive={latestRoi >= 0} />
+        <Stat label="ann_return" value={`${fmtPct(annReturn)}/yr`} sub={`XIRR since ${labels[0]}`} positive={annReturn >= 0} />
         <Stat label="snapshots" value={String(dataArrays.length)} sub={`${labels[0]} — ${labels[labels.length - 1]}`} />
       </div>
 
@@ -166,21 +206,25 @@ export default function PortfolioView() {
         </ResponsiveContainer>
       </Card>
 
-      {/* Total ROI */}
-      <Card cmd="total_roi --history">
+      {/* Annualized returns vs S&P 500 */}
+      <Card cmd="returns --annualized --benchmark=SPX">
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart data={annSeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
-            <TimeXAxis ticks={ticks} labels={labels} />
+            <XAxis dataKey="label" tick={tickStyle} tickLine={false} axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }} />
             <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
             <Tooltip
-              labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
-              formatter={(v: number) => [fmtPct(v), 'total ROI']}
+              formatter={(v: number, name: string) => [fmtPct(v), name]}
               contentStyle={tooltipStyle}
             />
-            <Line type="monotone" dataKey="roi" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 3, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line type="monotone" dataKey="you" name="you (ann.)" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 4, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+            <Line type="monotone" dataKey="spx" name="S&P 500 (ann.)" stroke={SPX_COLOR} strokeWidth={2} dot={{ r: 4, fill: SPX_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          {'// annualized since Dec 2023 · you = XIRR (money-weighted, deposits dated by snapshot) · S&P 500 = CAGR price return, dividends excluded'}
+        </p>
       </Card>
 
       {/* Yearly allocation: cost vs actual */}
