@@ -163,6 +163,38 @@ export default function PortfolioView() {
   const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
   const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
 
+  // Per-category growth indexed to 100 at inception, flow-adjusted:
+  // deposits/withdrawals are backed out from cost-basis changes (same
+  // approximation as the XIRR calc). BRK-B counts as Index per the data.
+  const CATEGORIES = ['Index', 'Stock', 'Cash', 'Bond'];
+  const CAT_COLORS: Record<string, string> = {
+    Index: ACCENT, // emerald
+    Stock: ROI_COLOR, // sky
+    Cash: '#9ca3af', // gray
+    Bond: '#a78bfa', // violet
+  };
+  const catState: Record<string, { indexed: number; prevCost: number; prevValue: number }> = {};
+  const catCombined = SNAPSHOTS.map((s, i) => {
+    const row: { ts: number; [k: string]: number } = { ts: s.ts };
+    for (const cat of CATEGORIES) {
+      const cost = dataArrays[i].filter((d) => d.Type === cat).reduce((t, d) => t + d.Cost, 0);
+      const value = dataArrays[i].filter((d) => d.Type === cat).reduce((t, d) => t + d.Actual, 0);
+      const st = catState[cat];
+      if (!st) {
+        catState[cat] = { indexed: 100, prevCost: cost, prevValue: value };
+        row[cat] = 100;
+      } else {
+        const flow = cost - st.prevCost;
+        const denom = st.prevValue + flow;
+        if (denom > 0) st.indexed = (st.indexed * value) / denom;
+        st.prevCost = cost;
+        st.prevValue = value;
+        row[cat] = st.indexed;
+      }
+    }
+    return row;
+  });
+
   // Holdings detail (latest snapshot): cost, market value, weight, ROI
   const latestTotal = latest.reduce((s, d) => s + d.Actual, 0);
   const holdings = [...latest]
@@ -245,6 +277,29 @@ export default function PortfolioView() {
         </ResponsiveContainer>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
           {'// net worth on the left axis · annualized returns on the right · you = XIRR (money-weighted) · S&P 500 = CAGR price return, dividends excluded'}
+        </p>
+      </Card>
+
+      {/* Index vs stock: flow-adjusted growth, Dec 2023 = 100 */}
+      <Card cmd="portfolio --by-category">
+        <ResponsiveContainer width="100%" height={300}>
+          <ComposedChart data={catCombined} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
+            <TimeXAxis ticks={ticks} labels={labels} />
+            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${Math.round(v)}`} domain={['auto', 'auto']} width={44} />
+            <Tooltip
+              labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
+              formatter={(v: number, name: string) => [`${Number(v ?? 0).toFixed(1)}`, name]}
+              contentStyle={tooltipStyle}
+            />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            {CATEGORIES.map((cat) => (
+              <Line key={cat} type="monotone" dataKey={cat} name={cat.toLowerCase()} stroke={CAT_COLORS[cat]} strokeWidth={2} dot={{ r: 3, fill: CAT_COLORS[cat], strokeWidth: 0 }} activeDot={{ r: 5 }} />
+            ))}
+          </ComposedChart>
+        </ResponsiveContainer>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          {'// growth of 100 invested per category, Dec 2023 = 100 · deposits/withdrawals backed out from cost-basis changes · BRK-B counts as index'}
         </p>
       </Card>
 
