@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar, Cell,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, Cell, LabelList,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
@@ -42,12 +42,9 @@ function xirr(flows: [number, number][]): number {
   return (lo + hi) / 2;
 }
 
-const TYPES = ['Index', 'Stock', 'Crypto', 'Cash', 'Bond'] as const;
-
 const ACCENT = '#10b981'; // emerald — terminal green
 const ROI_COLOR = '#38bdf8'; // sky
 const SPX_COLOR = '#f59e0b'; // amber — benchmark line
-const COST_COLOR = '#64748b'; // slate
 
 const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
 const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
@@ -108,7 +105,6 @@ function TimeXAxis({ ticks, labels }: { ticks: number[]; labels: string[] }) {
 
 export default function PortfolioView() {
   const [dataArrays, setDataArrays] = useState<Holding[][]>([]);
-  const [snapIdx, setSnapIdx] = useState(SNAPSHOTS.length - 1);
 
   useEffect(() => {
     Promise.all(SNAPSHOTS.map((s) => fetch(s.file).then((r) => r.json()))).then(setDataArrays);
@@ -156,39 +152,34 @@ export default function PortfolioView() {
   const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
   const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
 
-  // Yearly allocation: selected snapshot, cost vs actual side by side per type
-  const sel = dataArrays[snapIdx];
-  const allocRows = TYPES.map((t) => {
-    const rows = sel.filter((d) => d.Type === t);
-    return {
-      type: t,
-      cost: Math.round(rows.reduce((s, d) => s + d.Cost, 0)),
-      actual: Math.round(rows.reduce((s, d) => s + d.Actual, 0)),
-    };
-  }).filter((r) => r.cost > 0 || r.actual > 0);
-
   // Top holdings by market value (latest snapshot)
+  const latestTotal = latest.reduce((s, d) => s + d.Actual, 0);
   const topHoldings = [...latest]
     .sort((a, b) => b.Actual - a.Actual)
     .slice(0, 8)
-    .map((d) => ({ symbol: d.Symbol, value: Math.round(d.Actual), cost: Math.round(d.Cost) }));
+    .map((d) => ({
+      symbol: d.Symbol,
+      value: Math.round(d.Actual),
+      cost: Math.round(d.Cost),
+      pctLabel: `${((d.Actual / latestTotal) * 100).toFixed(1)}%`,
+    }));
 
   // Activity inferred from snapshot diffs (stocks only).
   // buy = new position, sell = removed (amount = last tracked value),
   // add/trim = cost-basis change. Intra-period trades aren't visible.
-  interface Activity { period: string; action: 'buy' | 'add' | 'trim' | 'sell'; symbol: string; amount: number }
+  interface Activity { period: string; action: 'buy' | 'add' | 'trim' | 'sell'; symbol: string; amount: number; pct: number | null }
   const activities: Activity[] = [];
   for (let i = 1; i < dataArrays.length; i++) {
     const prev = new Map(dataArrays[i - 1].filter((d) => d.Type === 'Stock').map((d) => [d.Symbol, d]));
     const period = `${labels[i - 1]} → ${labels[i]}`;
     dataArrays[i].filter((d) => d.Type === 'Stock').forEach((d) => {
       const p = prev.get(d.Symbol);
-      if (!p) activities.push({ period, action: 'buy', symbol: d.Symbol, amount: d.Cost });
-      else if (d.Cost - p.Cost > 1) activities.push({ period, action: 'add', symbol: d.Symbol, amount: d.Cost - p.Cost });
-      else if (p.Cost - d.Cost > 1) activities.push({ period, action: 'trim', symbol: d.Symbol, amount: p.Cost - d.Cost });
+      if (!p) activities.push({ period, action: 'buy', symbol: d.Symbol, amount: d.Cost, pct: null });
+      else if (d.Cost - p.Cost > 1) activities.push({ period, action: 'add', symbol: d.Symbol, amount: d.Cost - p.Cost, pct: ((d.Cost - p.Cost) / p.Cost) * 100 });
+      else if (p.Cost - d.Cost > 1) activities.push({ period, action: 'trim', symbol: d.Symbol, amount: p.Cost - d.Cost, pct: (-(p.Cost - d.Cost) / p.Cost) * 100 });
       prev.delete(d.Symbol);
     });
-    prev.forEach((p, sym) => activities.push({ period, action: 'sell', symbol: sym, amount: p.Actual }));
+    prev.forEach((p, sym) => activities.push({ period, action: 'sell', symbol: sym, amount: p.Actual, pct: -100 }));
   }
   activities.reverse(); // most recent first
 
@@ -259,43 +250,10 @@ export default function PortfolioView() {
         </p>
       </Card>
 
-      {/* Yearly allocation: cost vs actual */}
-      <Card cmd={`allocation --snapshot "${labels[snapIdx]}"`}>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {labels.map((l, i) => (
-            <button
-              key={l}
-              onClick={() => setSnapIdx(i)}
-              className={`px-2.5 py-1 rounded text-xs border transition-colors ${
-                i === snapIdx
-                  ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
-                  : 'border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={allocRows} barGap={4} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
-            <XAxis dataKey="type" tick={tickStyle} tickLine={false} axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }} />
-            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
-            <Tooltip formatter={(v: number, name: string) => [fmtK(v), name]} contentStyle={tooltipStyle} cursor={{ fill: 'var(--grid-color, #e5e7eb)', opacity: 0.3 }} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="cost" name="cost basis" fill={COST_COLOR} radius={[3, 3, 0, 0]} />
-            <Bar dataKey="actual" name="actual" fill={ACCENT} radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          // cost basis vs market value, by asset type — values in $k as tracked
-        </p>
-      </Card>
-
       {/* Top holdings */}
       <Card cmd="holdings --top=8">
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={topHoldings} layout="vertical" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <BarChart data={topHoldings} layout="vertical" margin={{ top: 10, right: 44, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" horizontal={false} />
             <XAxis type="number" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
             <YAxis type="category" dataKey="symbol" tick={tickStyle} tickLine={false} axisLine={false} width={64} />
@@ -304,11 +262,12 @@ export default function PortfolioView() {
               {topHoldings.map((h) => (
                 <Cell key={h.symbol} fill={h.value >= h.cost ? ACCENT : '#f87171'} />
               ))}
+              <LabelList dataKey="pctLabel" position="right" style={tickStyle} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          {'// latest snapshot · green = above cost basis, red = below'}
+          {'// latest snapshot · % of total portfolio value · green = above cost basis, red = below'}
         </p>
       </Card>
 
@@ -321,7 +280,8 @@ export default function PortfolioView() {
                 <th className="py-2 pr-4 font-normal">period</th>
                 <th className="py-2 pr-4 font-normal">action</th>
                 <th className="py-2 pr-4 font-normal">symbol</th>
-                <th className="py-2 font-normal text-right">amount</th>
+                <th className="py-2 pr-4 font-normal text-right">amount</th>
+                <th className="py-2 font-normal text-right">chg%</th>
               </tr>
             </thead>
             <tbody>
@@ -330,14 +290,15 @@ export default function PortfolioView() {
                   <td className="py-2 pr-4 text-gray-400 dark:text-gray-600 whitespace-nowrap">{a.period}</td>
                   <td className={`py-2 pr-4 font-bold ${ACTION_STYLE[a.action]}`}>{a.action}</td>
                   <td className="py-2 pr-4">{a.symbol}</td>
-                  <td className="py-2 text-right">{fmtK(a.amount)}</td>
+                  <td className="py-2 pr-4 text-right">{fmtK(a.amount)}</td>
+                  <td className={`py-2 text-right ${ACTION_STYLE[a.action]}`}>{a.pct === null ? '—' : `${a.pct > 0 ? '+' : ''}${a.pct.toFixed(1)}%`}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          {'// inferred from snapshot diffs · sells show last tracked value · intra-period trades aren\'t visible'}
+          {'// inferred from snapshot diffs · chg% = position size change vs prior snapshot · sells show last tracked value'}
         </p>
       </Card>
     </div>
