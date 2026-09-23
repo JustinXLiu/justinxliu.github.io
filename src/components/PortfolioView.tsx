@@ -47,8 +47,8 @@ const ACCENT = '#10b981'; // emerald — terminal green
 const ROI_COLOR = '#38bdf8'; // sky
 const SPX_COLOR = '#f59e0b'; // amber — benchmark line
 
-const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
-const fmtK2 = (v: number) => `$${(v / 1000).toFixed(2)}k`; // holdings table: keep sub-$k precision
+// Neutral units: raw scaled figures, no $ sign (scale is private)
+const fmtN = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 1 });
 const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
 
 const tooltipStyle = {
@@ -149,7 +149,7 @@ export default function PortfolioView() {
   });
   const annReturn = annSeries[annSeries.length - 1].you;
 
-  // Combined chart data: net worth (left axis, $) + annualized returns (right axis, %).
+  // Combined chart data: net worth (left axis, private units) + annualized returns (right axis, %).
   // Return lines start at the second snapshot (null at inception, connected through).
   const combined = series.map((s, i) => ({
     ts: s.ts,
@@ -213,9 +213,10 @@ export default function PortfolioView() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Stat label="net_worth" value={fmtK(latestActual)} sub={`${fmtPct(nwGrowth)} since ${labels[0]}`} positive={nwGrowth >= 0} />
+        <Stat label="net_worth" value={fmtN(latestActual)} sub={`${fmtPct(nwGrowth)} since ${labels[0]}`} positive={nwGrowth >= 0} />
         <Stat label="ann_return" value={`${fmtPct(annReturn)}/yr`} sub={`XIRR since ${labels[0]}`} positive={annReturn >= 0} />
       </div>
+      <p className="text-xs text-gray-400 dark:text-gray-600 -mt-2">{'// figures in private units · not dollar amounts'}</p>
 
       {/* Net worth + annualized returns vs S&P 500 */}
       <Card cmd="portfolio --net-worth --returns">
@@ -229,11 +230,11 @@ export default function PortfolioView() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
             <TimeXAxis ticks={ticks} labels={labels} />
-            <YAxis yAxisId="left" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
+            <YAxis yAxisId="left" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => fmtN(v)} width={56} />
             <YAxis yAxisId="right" orientation="right" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
             <Tooltip
               labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
-              formatter={(v: number, name: string) => (name === 'net worth' ? [fmtK(v ?? 0), name] : [fmtPct(v ?? 0), name])}
+              formatter={(v: number, name: string) => (name === 'net worth' ? [fmtN(v ?? 0), name] : [fmtPct(v ?? 0), name])}
               contentStyle={tooltipStyle}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -267,8 +268,8 @@ export default function PortfolioView() {
                     {h.symbol}
                     <span className="ml-2 font-normal text-gray-400 dark:text-gray-600">{h.type.toLowerCase()}</span>
                   </td>
-                  <td className="py-2 pr-4 text-right text-gray-400 dark:text-gray-600">{fmtK2(h.cost)}</td>
-                  <td className="py-2 pr-4 text-right">{fmtK2(h.value)}</td>
+                  <td className="py-2 pr-4 text-right text-gray-400 dark:text-gray-600">{fmtN(h.cost)}</td>
+                  <td className="py-2 pr-4 text-right">{fmtN(h.value)}</td>
                   <td className="py-2 pr-4 text-right">{h.weight.toFixed(1)}%</td>
                   <td className={`py-2 text-right font-bold ${h.roi >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                     {fmtPct(h.roi)}
