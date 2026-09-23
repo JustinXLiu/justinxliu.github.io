@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Area, Line, BarChart, Bar, Cell, LabelList, ComposedChart,
+  Area, Line, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
@@ -161,15 +161,17 @@ export default function PortfolioView() {
   const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
   const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
 
-  // Holdings by market value (latest snapshot), all of them
+  // Holdings detail (latest snapshot): cost, market value, weight, ROI
   const latestTotal = latest.reduce((s, d) => s + d.Actual, 0);
-  const topHoldings = [...latest]
+  const holdings = [...latest]
     .sort((a, b) => b.Actual - a.Actual)
     .map((d) => ({
       symbol: d.Symbol,
-      value: Math.round(d.Actual),
+      type: d.Type,
       cost: Math.round(d.Cost),
-      pctLabel: `${((d.Actual / latestTotal) * 100).toFixed(1)}%`,
+      value: Math.round(d.Actual),
+      weight: (d.Actual / latestTotal) * 100,
+      roi: d.Cost > 0 ? ((d.Actual - d.Cost) / d.Cost) * 100 : 0,
     }));
 
   // Activity inferred from snapshot diffs (stocks only).
@@ -246,22 +248,37 @@ export default function PortfolioView() {
 
       {/* Holdings */}
       <Card cmd="holdings --all">
-        <ResponsiveContainer width="100%" height={Math.max(300, topHoldings.length * 36)}>
-          <BarChart data={topHoldings} layout="vertical" margin={{ top: 10, right: 44, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" horizontal={false} />
-            <XAxis type="number" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
-            <YAxis type="category" dataKey="symbol" tick={tickStyle} tickLine={false} axisLine={false} width={64} />
-            <Tooltip formatter={(v: number) => [fmtK(v), 'value']} contentStyle={tooltipStyle} cursor={{ fill: 'var(--grid-color, #e5e7eb)', opacity: 0.3 }} />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]}>
-              {topHoldings.map((h) => (
-                <Cell key={h.symbol} fill={h.value >= h.cost ? ACCENT : '#f87171'} />
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs tabular-nums">
+            <thead>
+              <tr className="text-left text-gray-400 dark:text-gray-600 border-b border-gray-200 dark:border-white/10">
+                <th className="py-2 pr-4 font-normal">holding</th>
+                <th className="py-2 pr-4 font-normal text-right">cost</th>
+                <th className="py-2 pr-4 font-normal text-right">value</th>
+                <th className="py-2 pr-4 font-normal text-right">weight</th>
+                <th className="py-2 font-normal text-right">roi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdings.map((h) => (
+                <tr key={h.symbol} className="border-b border-gray-100 dark:border-white/5 last:border-0">
+                  <td className="py-2 pr-4 font-bold whitespace-nowrap">
+                    {h.symbol}
+                    <span className="ml-2 font-normal text-gray-400 dark:text-gray-600">{h.type.toLowerCase()}</span>
+                  </td>
+                  <td className="py-2 pr-4 text-right text-gray-400 dark:text-gray-600">{fmtK(h.cost)}</td>
+                  <td className="py-2 pr-4 text-right">{fmtK(h.value)}</td>
+                  <td className="py-2 pr-4 text-right">{h.weight.toFixed(1)}%</td>
+                  <td className={`py-2 text-right font-bold ${h.roi >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {fmtPct(h.roi)}
+                  </td>
+                </tr>
               ))}
-              <LabelList dataKey="pctLabel" position="right" style={tickStyle} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+            </tbody>
+          </table>
+        </div>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          {'// latest snapshot · % of total portfolio value · green = above cost basis, red = below'}
+          {'// latest snapshot · weight = % of portfolio value · roi = (value − cost) / cost, not annualized'}
         </p>
       </Card>
 
