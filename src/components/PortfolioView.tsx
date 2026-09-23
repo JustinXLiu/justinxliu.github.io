@@ -12,18 +12,23 @@ interface Holding {
 }
 
 const SNAPSHOTS = [
-  { label: 'Dec 2023', file: '/data/12_1_23.json', ts: new Date(2023, 11, 1).getTime() },
-  { label: 'Dec 2024', file: '/data/12_1_24.json', ts: new Date(2024, 11, 1).getTime() },
-  { label: 'Mar 2025', file: '/data/3_14_25.json', ts: new Date(2025, 2, 14).getTime() },
-  { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime() },
-  { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime() },
-  { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime() },
+  // spx: S&P 500 close on the snapshot date (nearest trading day; price return, dividends excluded)
+  { label: 'Dec 2023', file: '/data/12_1_23.json', ts: new Date(2023, 11, 1).getTime(), spx: 4594.63 },
+  { label: 'Dec 2024', file: '/data/12_1_24.json', ts: new Date(2024, 11, 1).getTime(), spx: 6032.38 },
+  { label: 'Mar 2025', file: '/data/3_14_25.json', ts: new Date(2025, 2, 14).getTime(), spx: 5638.94 },
+  { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime(), spx: 0 },
+  { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime(), spx: 0 },
+  { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime(), spx: 6632.19 },
 ];
+
+// [current, prior-year] snapshot index pairs for year-over-year comparison
+const YOY_PAIRS: [number, number][] = [[1, 0], [5, 2]];
 
 const TYPES = ['Index', 'Stock', 'Crypto', 'Cash', 'Bond'] as const;
 
 const ACCENT = '#10b981'; // emerald — terminal green
 const ROI_COLOR = '#38bdf8'; // sky
+const SPX_COLOR = '#f59e0b'; // amber — benchmark line
 const COST_COLOR = '#64748b'; // slate
 
 const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
@@ -99,13 +104,26 @@ export default function PortfolioView() {
   const labels = SNAPSHOTS.map((s) => s.label);
 
   // Time series: net worth + total ROI per snapshot
-  const series = dataArrays.map((arr, i) => {
-    const cost = arr.reduce((s, d) => s + d.Cost, 0);
-    const actual = arr.reduce((s, d) => s + d.Actual, 0);
+  const totals = dataArrays.map((arr) => ({
+    cost: arr.reduce((s, d) => s + d.Cost, 0),
+    actual: arr.reduce((s, d) => s + d.Actual, 0),
+  }));
+  const series = totals.map((t, i) => ({
+    ts: SNAPSHOTS[i].ts,
+    netWorth: t.actual,
+    roi: t.cost > 0 ? ((t.actual - t.cost) / t.cost) * 100 : 0,
+  }));
+
+  // Year-over-year returns, net of contributions (cost-basis change ≈ net deposits),
+  // vs S&P 500 price return over the same 12-month windows
+  const yoySeries = YOY_PAIRS.map(([cur, prev]) => {
+    const v1 = totals[cur].actual;
+    const v0 = totals[prev].actual;
+    const deposits = totals[cur].cost - totals[prev].cost;
     return {
-      ts: SNAPSHOTS[i].ts,
-      netWorth: actual,
-      roi: cost > 0 ? ((actual - cost) / cost) * 100 : 0,
+      label: labels[cur],
+      you: v0 > 0 ? ((v1 - v0 - deposits) / v0) * 100 : 0,
+      spx: (SNAPSHOTS[cur].spx / SNAPSHOTS[prev].spx - 1) * 100,
     };
   });
 
@@ -166,21 +184,25 @@ export default function PortfolioView() {
         </ResponsiveContainer>
       </Card>
 
-      {/* Total ROI */}
-      <Card cmd="total_roi --history">
+      {/* YoY returns vs S&P 500 */}
+      <Card cmd="returns --yoy --benchmark=SPX">
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart data={yoySeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
-            <TimeXAxis ticks={ticks} labels={labels} />
+            <XAxis dataKey="label" tick={tickStyle} tickLine={false} axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }} />
             <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
             <Tooltip
-              labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
-              formatter={(v: number) => [fmtPct(v), 'total ROI']}
+              formatter={(v: number, name: string) => [fmtPct(v), name]}
               contentStyle={tooltipStyle}
             />
-            <Line type="monotone" dataKey="roi" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 3, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line type="monotone" dataKey="you" name="you (YoY)" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 4, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+            <Line type="monotone" dataKey="spx" name="S&P 500 (YoY)" stroke={SPX_COLOR} strokeWidth={2} dot={{ r: 4, fill: SPX_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          {'// each point = 12 months ending at that snapshot · you = (value − prior value − net deposits) / prior value · S&P 500 price return, dividends excluded'}
+        </p>
       </Card>
 
       {/* Yearly allocation: cost vs actual */}
