@@ -1,0 +1,220 @@
+import { useState, useEffect } from 'react';
+import {
+  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
+
+interface Holding {
+  Type: string;
+  Symbol: string;
+  Cost: number;
+  Actual: number;
+}
+
+const SNAPSHOTS = [
+  { label: 'Dec 2023', file: '/data/12_1_23.json', ts: new Date(2023, 11, 1).getTime() },
+  { label: 'Dec 2024', file: '/data/12_1_24.json', ts: new Date(2024, 11, 1).getTime() },
+  { label: 'Mar 2025', file: '/data/3_14_25.json', ts: new Date(2025, 2, 14).getTime() },
+  { label: 'Jun 2025', file: '/data/6_13_25.json', ts: new Date(2025, 5, 13).getTime() },
+  { label: 'Sep 2025', file: '/data/9_16_25.json', ts: new Date(2025, 8, 16).getTime() },
+  { label: 'Mar 2026', file: '/data/3_14_26.json', ts: new Date(2026, 2, 14).getTime() },
+];
+
+const TYPES = ['Index', 'Stock', 'Crypto', 'Cash', 'Bond'] as const;
+
+const ACCENT = '#10b981'; // emerald — terminal green
+const ROI_COLOR = '#38bdf8'; // sky
+const COST_COLOR = '#64748b'; // slate
+
+const fmtK = (v: number) => `$${(v / 1000).toFixed(1)}k`;
+const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+
+const tooltipStyle = {
+  backgroundColor: 'var(--tooltip-bg, #fff)',
+  border: '1px solid var(--tooltip-border, #e5e7eb)',
+  borderRadius: '0.5rem',
+  fontSize: '0.75rem',
+  fontFamily: 'inherit',
+};
+
+const tickStyle = { fontSize: 11, fill: 'var(--axis-color, #6b7280)', fontFamily: 'inherit' };
+
+function Card({ cmd, children }: { cmd: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
+      <header className="px-4 py-2.5 border-b border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-gray-500">
+        <span className="text-emerald-600 dark:text-emerald-400">$</span> {cmd}
+      </header>
+      <div className="p-4">{children}</div>
+    </section>
+  );
+}
+
+function Stat({ label, value, sub, positive }: { label: string; value: string; sub?: string; positive?: boolean }) {
+  return (
+    <div className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-600">{label}</p>
+      <p className={`text-2xl font-bold mt-1 tabular-nums ${
+        positive === undefined ? '' : positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+      }`}>
+        {value}
+      </p>
+      {sub && <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+function TimeXAxis({ ticks, labels }: { ticks: number[]; labels: string[] }) {
+  return (
+    <XAxis
+      dataKey="ts"
+      type="number"
+      scale="time"
+      domain={['dataMin', 'dataMax']}
+      ticks={ticks}
+      tickFormatter={(ts: number) => {
+        const idx = ticks.indexOf(ts);
+        return idx >= 0 ? labels[idx] : '';
+      }}
+      tick={tickStyle}
+      tickLine={false}
+      axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }}
+    />
+  );
+}
+
+export default function PortfolioView() {
+  const [dataArrays, setDataArrays] = useState<Holding[][]>([]);
+  const [snapIdx, setSnapIdx] = useState(SNAPSHOTS.length - 1);
+
+  useEffect(() => {
+    Promise.all(SNAPSHOTS.map((s) => fetch(s.file).then((r) => r.json()))).then(setDataArrays);
+  }, []);
+
+  if (dataArrays.length === 0) {
+    return <div className="py-24 text-center text-sm text-gray-400 dark:text-gray-600">loading data…</div>;
+  }
+
+  const ticks = SNAPSHOTS.map((s) => s.ts);
+  const labels = SNAPSHOTS.map((s) => s.label);
+
+  // Time series: net worth + total ROI per snapshot
+  const series = dataArrays.map((arr, i) => {
+    const cost = arr.reduce((s, d) => s + d.Cost, 0);
+    const actual = arr.reduce((s, d) => s + d.Actual, 0);
+    return {
+      ts: SNAPSHOTS[i].ts,
+      netWorth: actual,
+      roi: cost > 0 ? ((actual - cost) / cost) * 100 : 0,
+    };
+  });
+
+  const latest = dataArrays[dataArrays.length - 1];
+  const latestCost = latest.reduce((s, d) => s + d.Cost, 0);
+  const latestActual = latest.reduce((s, d) => s + d.Actual, 0);
+  const latestRoi = ((latestActual - latestCost) / latestCost) * 100;
+  const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
+  const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
+
+  // Yearly allocation: selected snapshot, cost vs actual side by side per type
+  const sel = dataArrays[snapIdx];
+  const allocRows = TYPES.map((t) => {
+    const rows = sel.filter((d) => d.Type === t);
+    return {
+      type: t,
+      cost: Math.round(rows.reduce((s, d) => s + d.Cost, 0)),
+      actual: Math.round(rows.reduce((s, d) => s + d.Actual, 0)),
+    };
+  }).filter((r) => r.cost > 0 || r.actual > 0);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs text-gray-400 dark:text-gray-600">
+          <span className="text-emerald-600 dark:text-emerald-400">$</span> ./portfolio --all
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight mt-2">portfolio</h1>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Stat label="net_worth" value={fmtK(latestActual)} sub={`${fmtPct(nwGrowth)} since ${labels[0]}`} positive={nwGrowth >= 0} />
+        <Stat label="total_roi" value={fmtPct(latestRoi)} sub={`on ${fmtK(latestCost)} cost basis`} positive={latestRoi >= 0} />
+        <Stat label="snapshots" value={String(dataArrays.length)} sub={`${labels[0]} — ${labels[labels.length - 1]}`} />
+      </div>
+
+      {/* Net worth */}
+      <Card cmd="net_worth --history">
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={ACCENT} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={ACCENT} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
+            <TimeXAxis ticks={ticks} labels={labels} />
+            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
+            <Tooltip
+              labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
+              formatter={(v: number) => [fmtK(v), 'net worth']}
+              contentStyle={tooltipStyle}
+            />
+            <Area type="monotone" dataKey="netWorth" stroke={ACCENT} strokeWidth={2} fill="url(#nwFill)" dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* Total ROI */}
+      <Card cmd="total_roi --history">
+        <ResponsiveContainer width="100%" height={260}>
+          <LineChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
+            <TimeXAxis ticks={ticks} labels={labels} />
+            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
+            <Tooltip
+              labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
+              formatter={(v: number) => [fmtPct(v), 'total ROI']}
+              contentStyle={tooltipStyle}
+            />
+            <Line type="monotone" dataKey="roi" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 3, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* Yearly allocation: cost vs actual */}
+      <Card cmd={`allocation --snapshot "${labels[snapIdx]}"`}>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {labels.map((l, i) => (
+            <button
+              key={l}
+              onClick={() => setSnapIdx(i)}
+              className={`px-2.5 py-1 rounded text-xs border transition-colors ${
+                i === snapIdx
+                  ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
+                  : 'border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={allocRows} barGap={4} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
+            <XAxis dataKey="type" tick={tickStyle} tickLine={false} axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }} />
+            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
+            <Tooltip formatter={(v: number, name: string) => [fmtK(v), name]} contentStyle={tooltipStyle} cursor={{ fill: 'var(--grid-color, #e5e7eb)', opacity: 0.3 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar dataKey="cost" name="cost basis" fill={COST_COLOR} radius={[3, 3, 0, 0]} />
+            <Bar dataKey="actual" name="actual" fill={ACCENT} radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+        <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
+          // cost basis vs market value, by asset type — values in $k as tracked
+        </p>
+      </Card>
+    </div>
+  );
+}
