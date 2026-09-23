@@ -278,14 +278,17 @@ export default function PortfolioView() {
               </tr>
             </thead>
             <tbody>
-              {activities.map((a, idx) => (
-                <tr key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0">
-                  <td className="py-2 pr-4 text-gray-900 dark:text-gray-100 font-semibold whitespace-nowrap">{a.period}</td>
-                  <td className={`py-2 pr-4 font-bold ${ACTION_STYLE[a.action]}`}>{a.action}</td>
-                  <td className="py-2 pr-4">{a.symbol}</td>
-                  <td className={`py-2 text-right ${ACTION_STYLE[a.action]}`}>{a.pct === null ? '—' : `${a.pct > 0 ? '+' : ''}${a.pct.toFixed(1)}%`}</td>
-                </tr>
-              ))}
+              {activities.map((a, idx) => {
+                const newPeriod = idx === 0 || activities[idx - 1].period !== a.period;
+                return (
+                  <tr key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0">
+                    <td className="py-2 pr-4 text-gray-900 dark:text-gray-100 font-semibold whitespace-nowrap">{newPeriod ? a.period : ''}</td>
+                    <td className={`py-2 pr-4 font-bold ${ACTION_STYLE[a.action]}`}>{a.action}</td>
+                    <td className="py-2 pr-4">{a.symbol}</td>
+                    <td className={`py-2 text-right ${ACTION_STYLE[a.action]}`}>{a.pct === null ? '—' : `${a.pct > 0 ? '+' : ''}${a.pct.toFixed(1)}%`}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
