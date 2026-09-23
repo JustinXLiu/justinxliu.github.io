@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar, Cell, LabelList,
+  Area, Line, BarChart, Bar, Cell, LabelList, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
@@ -147,16 +147,24 @@ export default function PortfolioView() {
   });
   const annReturn = annSeries[annSeries.length - 1].you;
 
+  // Combined chart data: net worth (left axis, $) + annualized returns (right axis, %).
+  // Return lines start at the second snapshot (null at inception, connected through).
+  const combined = series.map((s, i) => ({
+    ts: s.ts,
+    netWorth: s.netWorth,
+    you: i > 0 ? annSeries[i - 1].you : null,
+    spx: i > 0 ? annSeries[i - 1].spx : null,
+  }));
+
   const latest = dataArrays[dataArrays.length - 1];
   const latestActual = latest.reduce((s, d) => s + d.Actual, 0);
   const firstActual = dataArrays[0].reduce((s, d) => s + d.Actual, 0);
   const nwGrowth = ((latestActual - firstActual) / firstActual) * 100;
 
-  // Top holdings by market value (latest snapshot)
+  // Holdings by market value (latest snapshot), all of them
   const latestTotal = latest.reduce((s, d) => s + d.Actual, 0);
   const topHoldings = [...latest]
     .sort((a, b) => b.Actual - a.Actual)
-    .slice(0, 8)
     .map((d) => ({
       symbol: d.Symbol,
       value: Math.round(d.Actual),
@@ -167,19 +175,19 @@ export default function PortfolioView() {
   // Activity inferred from snapshot diffs (stocks only).
   // buy = new position, sell = removed (amount = last tracked value),
   // add/trim = cost-basis change. Intra-period trades aren't visible.
-  interface Activity { period: string; action: 'buy' | 'add' | 'trim' | 'sell'; symbol: string; amount: number; pct: number | null }
+  interface Activity { period: string; action: 'buy' | 'add' | 'trim' | 'sell'; symbol: string; pct: number | null }
   const activities: Activity[] = [];
   for (let i = 1; i < dataArrays.length; i++) {
     const prev = new Map(dataArrays[i - 1].filter((d) => d.Type === 'Stock').map((d) => [d.Symbol, d]));
     const period = `${labels[i - 1]} → ${labels[i]}`;
     dataArrays[i].filter((d) => d.Type === 'Stock').forEach((d) => {
       const p = prev.get(d.Symbol);
-      if (!p) activities.push({ period, action: 'buy', symbol: d.Symbol, amount: d.Cost, pct: null });
-      else if (d.Cost - p.Cost > 1) activities.push({ period, action: 'add', symbol: d.Symbol, amount: d.Cost - p.Cost, pct: ((d.Cost - p.Cost) / p.Cost) * 100 });
-      else if (p.Cost - d.Cost > 1) activities.push({ period, action: 'trim', symbol: d.Symbol, amount: p.Cost - d.Cost, pct: (-(p.Cost - d.Cost) / p.Cost) * 100 });
+      if (!p) activities.push({ period, action: 'buy', symbol: d.Symbol, pct: null });
+      else if (d.Cost - p.Cost > 1) activities.push({ period, action: 'add', symbol: d.Symbol, pct: ((d.Cost - p.Cost) / p.Cost) * 100 });
+      else if (p.Cost - d.Cost > 1) activities.push({ period, action: 'trim', symbol: d.Symbol, pct: (-(p.Cost - d.Cost) / p.Cost) * 100 });
       prev.delete(d.Symbol);
     });
-    prev.forEach((p, sym) => activities.push({ period, action: 'sell', symbol: sym, amount: p.Actual, pct: -100 }));
+    prev.forEach((p, sym) => activities.push({ period, action: 'sell', symbol: sym, pct: -100 }));
   }
   activities.reverse(); // most recent first
 
@@ -206,10 +214,10 @@ export default function PortfolioView() {
         <Stat label="snapshots" value={String(dataArrays.length)} sub={`${labels[0]} — ${labels[labels.length - 1]}`} />
       </div>
 
-      {/* Net worth */}
-      <Card cmd="net_worth --history">
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      {/* Net worth + annualized returns vs S&P 500 */}
+      <Card cmd="portfolio --net-worth --returns">
+        <ResponsiveContainer width="100%" height={320}>
+          <ComposedChart data={combined} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={ACCENT} stopOpacity={0.25} />
@@ -218,41 +226,27 @@ export default function PortfolioView() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
             <TimeXAxis ticks={ticks} labels={labels} />
-            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
+            <YAxis yAxisId="left" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={48} />
+            <YAxis yAxisId="right" orientation="right" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
             <Tooltip
               labelFormatter={(ts) => labels[ticks.indexOf(ts as number)] ?? ''}
-              formatter={(v: number) => [fmtK(v), 'net worth']}
-              contentStyle={tooltipStyle}
-            />
-            <Area type="monotone" dataKey="netWorth" stroke={ACCENT} strokeWidth={2} fill="url(#nwFill)" dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 5 }} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </Card>
-
-      {/* Annualized returns vs S&P 500 */}
-      <Card cmd="returns --annualized --benchmark=SPX">
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={annSeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" vertical={false} />
-            <XAxis dataKey="label" tick={tickStyle} tickLine={false} axisLine={{ stroke: 'var(--grid-color, #e5e7eb)' }} />
-            <YAxis tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} width={52} />
-            <Tooltip
-              formatter={(v: number, name: string) => [fmtPct(v), name]}
+              formatter={(v: number, name: string) => (name === 'net worth' ? [fmtK(v ?? 0), name] : [fmtPct(v ?? 0), name])}
               contentStyle={tooltipStyle}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="you" name="you (ann.)" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 4, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
-            <Line type="monotone" dataKey="spx" name="S&P 500 (ann.)" stroke={SPX_COLOR} strokeWidth={2} dot={{ r: 4, fill: SPX_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} />
-          </LineChart>
+            <Area yAxisId="left" type="monotone" dataKey="netWorth" name="net worth" stroke={ACCENT} strokeWidth={2} fill="url(#nwFill)" dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+            <Line yAxisId="right" type="monotone" dataKey="you" name="you (ann.)" stroke={ROI_COLOR} strokeWidth={2} dot={{ r: 4, fill: ROI_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} connectNulls />
+            <Line yAxisId="right" type="monotone" dataKey="spx" name="S&P 500 (ann.)" stroke={SPX_COLOR} strokeWidth={2} dot={{ r: 4, fill: SPX_COLOR, strokeWidth: 0 }} activeDot={{ r: 6 }} connectNulls />
+          </ComposedChart>
         </ResponsiveContainer>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          {'// annualized since Dec 2023 · you = XIRR (money-weighted, deposits dated by snapshot) · S&P 500 = CAGR price return, dividends excluded'}
+          {'// net worth on the left axis · annualized returns on the right · you = XIRR (money-weighted) · S&P 500 = CAGR price return, dividends excluded'}
         </p>
       </Card>
 
-      {/* Top holdings */}
-      <Card cmd="holdings --top=8">
-        <ResponsiveContainer width="100%" height={300}>
+      {/* Holdings */}
+      <Card cmd="holdings --all">
+        <ResponsiveContainer width="100%" height={Math.max(300, topHoldings.length * 36)}>
           <BarChart data={topHoldings} layout="vertical" margin={{ top: 10, right: 44, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grid-color, #e5e7eb)" horizontal={false} />
             <XAxis type="number" tick={tickStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
@@ -280,17 +274,15 @@ export default function PortfolioView() {
                 <th className="py-2 pr-4 font-normal">period</th>
                 <th className="py-2 pr-4 font-normal">action</th>
                 <th className="py-2 pr-4 font-normal">symbol</th>
-                <th className="py-2 pr-4 font-normal text-right">amount</th>
                 <th className="py-2 font-normal text-right">chg%</th>
               </tr>
             </thead>
             <tbody>
               {activities.map((a, idx) => (
                 <tr key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0">
-                  <td className="py-2 pr-4 text-gray-400 dark:text-gray-600 whitespace-nowrap">{a.period}</td>
+                  <td className="py-2 pr-4 text-gray-900 dark:text-gray-100 font-semibold whitespace-nowrap">{a.period}</td>
                   <td className={`py-2 pr-4 font-bold ${ACTION_STYLE[a.action]}`}>{a.action}</td>
                   <td className="py-2 pr-4">{a.symbol}</td>
-                  <td className="py-2 pr-4 text-right">{fmtK(a.amount)}</td>
                   <td className={`py-2 text-right ${ACTION_STYLE[a.action]}`}>{a.pct === null ? '—' : `${a.pct > 0 ? '+' : ''}${a.pct.toFixed(1)}%`}</td>
                 </tr>
               ))}
@@ -298,7 +290,7 @@ export default function PortfolioView() {
           </table>
         </div>
         <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-3">
-          {'// inferred from snapshot diffs · chg% = position size change vs prior snapshot · sells show last tracked value'}
+          {'// inferred from snapshot diffs · chg% = position size change vs prior snapshot'}
         </p>
       </Card>
     </div>
